@@ -4,8 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "set NODE_ENV=dev&&node src/server.js",
-    "prod": "set NODE_ENV=prod&&nodemon src/server.js"
+    "dev": "set NODE_ENV=dev&&nodemon src/server.js",
+    "prod": "set NODE_ENV=prod&&node src/server.js"
   },
   "repository": {
     "type": "git",
@@ -30,6 +30,6 @@
     "eslint": "^7.31.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.4",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.22"
   }
 }
