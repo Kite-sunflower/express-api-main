@@ -9,7 +9,7 @@ async function run(){
 
     //1.Get a list of products purchased in January 2021.
     const result1 = await db.collection('Sales').aggregate([
-        {$match:{date:{$regex: '"month": 1.*"year": 2021',$options: 's' }}},
+        {$match:{"date":{$gte: new Date("2021-01-01"),$lte: new Date("2021-01-31")}}},
         {$unwind:"$productsSold"},
         { $lookup: {
             from: "Products",
@@ -29,12 +29,12 @@ async function run(){
 
     //2.Obtain the names of the vendors that supplied the printers or computers during the 2021.
     const result2 = await db.collection('Sales').aggregate([
-    { $match: { date: { $regex:'"year": 2021'} } },
+    { $match: { date: {$gte: new Date("2021-01-01"),$lte: new Date("2021-12-31") } }},
     { $unwind: "$productsSold" },
     { $lookup: { from: "Products", localField: "productsSold.productId", foreignField: "_id", as: "product" } },
     { $unwind: "$product" },
     { $match: { "product.name": { $in: ["Personal Computer", "Printer"] } } },
-    {$unwind:"$product.suppliers"},
+    { $unwind:"$product.suppliers"},
     { $lookup: { from: "Suppliers", localField: "product.suppliers.supplierId", foreignField: "_id", as: "supplier" } },
     { $unwind: "$supplier" },
     { $group: { _id: "$supplier._id", name: { $first: "$supplier.name" } } },
@@ -85,7 +85,7 @@ async function run(){
 
   //6.Get statistics on the number of orders made in 2021
   const result6 = await db.collection('Sales').aggregate([
-    { $match: { date: { $regex: '"year": 2021'} } },
+    { $match: { date: {$gte: new Date("2021-01-01"),$lte: new Date("2021-12-31")} } },
     { $count : "totalOrders"}
   ]).toArray();
   console.log("\n=== 6. 2021年订单数量 ===");
