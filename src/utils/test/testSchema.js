@@ -1,10 +1,10 @@
-const connectDB = require('./src/db/connection');
+const connectDB = require('../../db/connection');
 
 
-const Product = require('./src/models/Product');
-const Supplier = require('./src/models/Supplier');
-const Order = require('./src/models/Order');
-const Delivery = require('./src/models/Delivery');
+const Product = require('../../models/Product');
+const Supplier = require('../../models/Supplier');
+const Order = require('../../models/Order');
+const Delivery = require('../../models/Delivery');
 
 
 //通用查询函数

@@ -1,0 +1,20 @@
+{
+  // 👇 关闭文件夹折叠（你之前的文件夹挤在一起，就是这个控制）
+  "explorer.compactFolders": false,
+
+  // 👇 保存文件时 **自动格式化代码**
+  "editor.formatOnSave": true,
+
+  // 👇 默认格式化工具 = Prettier（让代码变漂亮）
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // 👇 保存时 **自动让 ESLint 修复代码错误**
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // 👇 JS 文件专门指定用 Prettier
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
