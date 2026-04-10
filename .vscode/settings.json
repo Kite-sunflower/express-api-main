@@ -16,5 +16,6 @@
   // 👇 JS 文件专门指定用 Prettier
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "editor.fontSize": 16
 }

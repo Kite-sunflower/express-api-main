@@ -17,11 +17,11 @@ async function run() {
           },
         },
       },
-      { $unwind: '$ProductSold' },
+      { $unwind: '$ProductsSold' },
       {
         $lookup: {
           from: 'Products',
-          localField: 'ProductSold.productId',
+          localField: 'ProductsSold.productId',
           foreignField: '_id',
           as: 'product',
         },
@@ -29,7 +29,7 @@ async function run() {
       { $unwind: '$product' },
       {
         $match: {
-          'product.name': 'printer',
+          'product.name': 'Printer',
         },
       },
       { $unwind: '$product.suppliers' },
@@ -41,10 +41,10 @@ async function run() {
           as: 'supplier',
         },
       },
-      { $unwind: 'supplier' },
+      { $unwind: '$supplier' },
       {
         $group: {
-          _id: '$supplier.Id',
+          _id: '$supplier._id',
           supplierName: { $first: '$supplier.name' },
           phone: { $first: '$supplier.phone' },
         },
@@ -68,20 +68,14 @@ async function run() {
     .aggregate([
       {
         $group: {
-          _id: 'address.ctiy',
-          supplierId: '$_id',
-        },
-      },
-      {
-        $group: {
-          _id: '_id.city',
+          _id: '$address.city',
           supplierCount: { $sum: 1 },
         },
       },
       {
         $project: {
           _id: 0,
-          city: 1,
+          city: '$_id',
           supplierCount: 1,
         },
       },
@@ -98,7 +92,7 @@ async function run() {
       { $unwind: '$suppliers' },
       {
         $group: {
-          _id: '_id',
+          _id: '$_id',
           stock: { $first: '$stock' },
           minPrice: { $min: '$suppliers.price' },
         },
@@ -106,7 +100,7 @@ async function run() {
       {
         $group: {
           _id: null,
-          totalCoct: {
+          totalCost: {
             $sum: { $multiply: ['$minPrice', '$stock'] },
           },
         },
@@ -161,12 +155,12 @@ async function run() {
   const result5 = await db
     .collection('Products')
     .aggregate([
-      { $unwind: 'suppliers' },
+      { $unwind: '$suppliers' },
       {
         $group: {
           _id: '$name',
           minPrice: { $min: '$suppliers.price' },
-          productData: { $first: '$$ROOT' },
+          supplierId: { $first: '$suppliers.supplierId' },
         },
       },
       {
@@ -177,11 +171,11 @@ async function run() {
           as: 'supplierInfo',
         },
       },
-      { $unwind: 'supplierInfo' },
+      { $unwind: '$supplierInfo' },
       {
         $project: {
           _id: 0,
-          productName: '_id',
+          productName: '$_id',
           lowerprice: '$minPrice',
           supplierName: '$supplierInfo.name',
         },
@@ -199,12 +193,12 @@ async function run() {
       {
         $match: {
           date: {
-            $gte: new Date('2026-12-01'),
-            $lte: new Date('2026-12-31'),
+            $gte: new Date('2006-12-01'),
+            $lte: new Date('2006-12-31'),
           },
         },
       },
-      { $unwind: 'suppliers' },
+      { $unwind: '$productsSold' },
       {
         $lookup: {
           from: 'Products',
@@ -217,9 +211,8 @@ async function run() {
       { $unwind: '$product.suppliers' },
       {
         $group: {
-          _id: 'product.suppliers.suoolierId',
-          minPrice: { $min: '$suppliers.price' },
-          totalSold: { $sum: 'ProductsSold.quantity' },
+          _id: '$product.suppliers.supplierId',
+          totalSold: { $sum: '$productsSold.quantity' },
         },
       },
       {
@@ -252,15 +245,15 @@ async function run() {
       {
         $match: {
           'suppliers.date': {
-            $gte: new Date('2027-01-01'),
-            $lte: new Date('2027-01-31'),
+            $gte: new Date('2020-01-01'),
+            $lte: new Date('2020-01-31'),
           },
         },
       },
       {
         $group: {
           _id: '$name',
-          maxPrice: { $max: '$product.suppliers.price' },
+          maxPrice: { $max: '$suppliers.price' },
           productData: { $first: '$$ROOT' },
         },
       },
@@ -283,7 +276,7 @@ async function run() {
       {
         $project: {
           _id: 0,
-          productNmae: 1,
+          productName: 1,
           highestDeliveryPrice: '$maxPrice',
           supplierName: '$supplier.name',
           supplierPhone: '$supplier.phoneNumber',
@@ -297,14 +290,13 @@ async function run() {
 
   // 8. Get statistics on the number of orders in March, April, May 2006 in the form
   const result8 = await db
-    .collection('Products')
+    .collection('Sales')
     .aggregate([
-      { $unwind: '$suppliers' },
       {
         $match: {
-          'suppliers.date': {
-            $gte: new Date('2026-03-01'),
-            $lte: new Date('2026-5-31'),
+          date: {
+            $gte: new Date('2006-03-01'),
+            $lte: new Date('2006-05-31'),
           },
         },
       },
