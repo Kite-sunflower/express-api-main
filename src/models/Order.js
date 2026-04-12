@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
     unique: true,
+    default: Date.now,
   },
   productId: {
     type: ObjectId,
