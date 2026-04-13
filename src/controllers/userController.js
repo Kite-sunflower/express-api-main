@@ -1,6 +1,6 @@
-const db = require("../db/connection");
-const requestTime = require("../middlewares/requestTime");
-const users = db.get("users");
+const db = require('../db/connection');
+const requestTime = require('../middlewares/requestTime');
+const users = db.get('users');
 
 exports.getAllUser = async (req, res, next) => {
   try {
@@ -10,7 +10,7 @@ exports.getAllUser = async (req, res, next) => {
       requestTime: req.requestTime,
     });
   } catch (error) {
-    next(eror);
+    next(error);
   }
 };
 
@@ -20,7 +20,7 @@ exports.getUserByUserName = async (req, res, next) => {
       name: req.params.userName,
     });
     if (!user) {
-      return res.status(404).json({ message: "user not find" });
+      return res.status(404).json({ message: 'user not find' });
       res.json({
         user,
         requestTime: res.requestTime,
@@ -38,7 +38,7 @@ exports.getUserById = async (req, res, next) => {
     });
     if (!user) {
       return res.status(404).json({
-        message: "user not find",
+        message: 'user not find',
       });
     }
     res.json({
@@ -68,7 +68,7 @@ exports.getUserInRange = async (req, res, next) => {
     const { min, max } = req.query;
     if (!min || !max) {
       return res.status(400).json({
-        message: "please imporve min and max params",
+        message: 'please imporve min and max params',
       });
     }
     const rangedUsers = await user.find({

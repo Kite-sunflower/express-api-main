@@ -44,7 +44,7 @@ async function task() {
       .toArray();
 
     const product = products[0];
-    if (products.length < 0) {
+    if (products.length === 0) {
       console.log(`${productName2}不存在`);
       return mongoose.disconnect();
     } else {
@@ -61,7 +61,7 @@ async function task() {
       mongoose.disconnect();
     }
   } catch (error) {
-    console.err('failed', error);
+    console.error('failed', error);
     mongoose.disconnect();
   }
 }
