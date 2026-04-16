@@ -1,5 +1,5 @@
 const express = require(express);
-const route = express.Router();
+const router = express.Router();
 const { getAllorders, getOrderById, createOrder, updateOrder, deleteOredr } = require('../controllers/orderController');
 
 router.get('/', getAllorders);

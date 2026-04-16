@@ -7,12 +7,15 @@ const helmet = require('helmet');
 const bodyParser = require('body-parser');
 
 const requestTime = require('./middlewares/requestTime');
-const productController = require('./controllers/productControlller');
-const ordercontroller = require('./controllers/orderController');
-const supplierController = require('./controllers/supplierController');
-const deliveryController = require('./controllers/deliveryController');
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
+
+const productRoute = require('./routes/productRoute');
+const orderRoute = require('./routes/orderRoute');
+const supplierRoute = require('./routes/supplierRoute');
+const deliveryRoute = require('./routes/deliveryRoute');
+const userRoute = require('./routes/userRoute');
+const authRoute = require('./routes/authRoute');
 
 const app = express();
 
@@ -21,10 +24,12 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(requestTime);
 
-app.use(productController);
-app.use(ordercontroller);
-app.use(supplierController);
-app.use(deliveryController);
+app.use('/api/product', productRoute);
+app.use('order', orderRoute);
+app.use('api/supplier', supplierRoute);
+app.use('delivery', deliveryRoute);
+app.use('/api/user', userRoute);
+app.use('/api/auth', authRoute);
 
 app.use(notFound);
 app.use(errorHandler);

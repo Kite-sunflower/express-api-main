@@ -1,21 +1,25 @@
+const { truncates } = require('bcryptjs');
 const mongoose = require('mongoose');
 
-const supplierSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const supplierSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    address: {
+      type: String,
+      required: true,
+    },
   },
-  phone: {
-    type: String,
-    required: true,
-  },
-  address: {
-    type: String,
-    required: true,
-  },
-  createTime: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 module.exports = mongoose.model('Supplier', supplierSchema);

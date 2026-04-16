@@ -17,14 +17,14 @@ module.exports = {
     'array-element-newline': 'off',
     'function-paren-newline': 'off',
     'implicit-arrow-linebreak': 'off',
-    'operator-linebreak': 'off',
+
     // Prettier 完全接管，强制一行
     'prettier/prettier': [
       'error',
       {
         singleQuote: true,
         trailingComma: 'es5',
-        printWidth: 999, // 拉到最大，绝对不换行
+        printWidth: 400, // 拉到最大，绝对不换行
         tabWidth: 2,
         semi: true,
         endOfLine: 'auto',

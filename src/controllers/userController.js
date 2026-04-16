@@ -1,31 +1,15 @@
-const db = require('../db/connection');
 const requestTime = require('../middlewares/requestTime');
-const users = db.get('users');
+const User = require('../models/User');
 
-exports.getAllUser = async (req, res, next) => {
+exports.getAllUsers = async (req, res, next) => {
   try {
-    const allUsers = await users.find({});
-    res.json({
-      allUsers,
+    const allUsers = await User.find({});
+    res.status(200).json({
+      status: 'success',
+      results: allUsers.length,
+      data: { allUsers },
       requestTime: req.requestTime,
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getUserByUserName = async (req, res, next) => {
-  try {
-    const user = await users.findOne({
-      name: req.params.userName,
-    });
-    if (!user) {
-      return res.status(404).json({ message: 'user not find' });
-      res.json({
-        user,
-        requestTime: res.requestTime,
-      });
-    }
   } catch (error) {
     next(error);
   }
@@ -33,47 +17,88 @@ exports.getUserByUserName = async (req, res, next) => {
 
 exports.getUserById = async (req, res, next) => {
   try {
-    const user = await user.findOne({
-      _id: req.params.id,
-    });
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({
-        message: 'user not find',
+        status: 'fail',
+        message: '用户不存在',
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: { user },
+        requestTime: req.requestTime,
       });
     }
-    res.json({
-      user,
-      requestTime: req.requestTime,
-    });
   } catch (error) {
     next(error);
   }
 };
 
-exports.getAllJobs = async (req, res, next) => {
+exports.createUser = async (req, res, next) => {
   try {
-    const allUser = await users.find({});
-    const jobs = [...new set(allUsers.map((u) => u.job))];
-    res.json({
-      jobs,
-      requestTime: res.requestTime,
+    const existUser = await User.findOne({
+      username: req.body.username,
     });
-  } catch (error) {
-    next(error);
-  }
-};
 
-exports.getUserInRange = async (req, res, next) => {
-  try {
-    const { min, max } = req.query;
-    if (!min || !max) {
+    if (existUser) {
       return res.status(400).json({
-        message: 'please imporve min and max params',
+        status: 'fail',
+        message: '用户名已存在',
+      });
+    } else {
+      const newUser = await User.create(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: { newUser },
+        requestTime: req.requestTime,
       });
     }
-    const rangedUsers = await user.find({
-      _id: { $gte: min, $lte: max },
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateUser = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
     });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '用户不存在',
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: { user },
+        requestTime: req.requestTime,
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '用户不存在',
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: null,
+        message: '用户已删除',
+        requestTime: req.requestTime,
+      });
+    }
   } catch (error) {
     next(error);
   }
