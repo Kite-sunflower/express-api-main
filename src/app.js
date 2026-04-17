@@ -25,9 +25,9 @@ app.use(bodyParser.json());
 app.use(requestTime);
 
 app.use('/api/product', productRoute);
-app.use('order', orderRoute);
-app.use('api/supplier', supplierRoute);
-app.use('delivery', deliveryRoute);
+app.use('/api/order', orderRoute);
+app.use('/api/supplier', supplierRoute);
+app.use('/api/delivery', deliveryRoute);
 app.use('/api/user', userRoute);
 app.use('/api/auth', authRoute);
 

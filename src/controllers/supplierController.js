@@ -3,12 +3,26 @@ const Supplier = require('../models/Supplier');
 
 exports.getAllSuppliers = async (req, res, next) => {
   try {
-    const suppliers = await Supplier.find({});
-    res.status(200).json({
+    const { page = 1, limit = 10, keyword = '', status = '' } = req.query;
+    const query = {};
+
+    if (keyword) query.name = { $regex: keyword, $options: 'i' };
+    if (status) query.status = status;
+
+    const data = await Model.find(query)
+      .skip((page - 1) * limit)
+      .limit(+limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Supplier.countDocuments(query);
+
+    res.json({
       status: 'success',
-      results: suppliers.length,
-      data: { suppliers },
-      requestTime: req.requestTime,
+      total,
+      page,
+      limit,
+      data: { data },
+      request: req.requestTime,
     });
   } catch (error) {
     next(error);
@@ -44,7 +58,7 @@ exports.createSupplier = async (req, res, next) => {
     next(error);
   }
 };
-exports.updateSupplier = async (req, res, next) => {
+exports.updateSupplierById = async (req, res, next) => {
   try {
     const supplier = await Supplier.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!supplier) {
@@ -63,7 +77,7 @@ exports.updateSupplier = async (req, res, next) => {
     next(error);
   }
 };
-exports.deleteSupplier = async (req, res, next) => {
+exports.deleteSupplierById = async (req, res, next) => {
   try {
     const supplier = await Supplier.findByIdAndDelete(req.params.id);
     if (!supplier) {
@@ -76,6 +90,28 @@ exports.deleteSupplier = async (req, res, next) => {
         status: 'success',
         data: null,
         message: '供应商已删除',
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteManySupplier = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '请选择删除的供应商',
+      });
+    } else {
+      await Supplier.deleteMany({ _id: { $in: ids } });
+      res.satatus(200).json({
+        status: 'success',
+        data: null,
+        message: '供应商批量删除成功',
       });
     }
   } catch (error) {

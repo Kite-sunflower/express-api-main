@@ -1,9 +1,15 @@
+const { required } = require('joi');
 const mongoose = require('mongoose');
 
 const { ObjectId } = mongoose.Schema.Types;
 
 const deliverySchema = new mongoose.Schema(
   {
+    deliveryNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     orderId: {
       type: ObjectId,
       ref: 'Order',

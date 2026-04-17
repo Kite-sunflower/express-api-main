@@ -1,13 +1,38 @@
 const requestTime = require('../middlewares/requestTime');
 const Delivery = require('../models/Delivery');
 
+//生成发货单
+function generateDeliveryNo() {
+  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `SHIP_${date}_${random}`;
+}
+
 exports.getAllDelivery = async (req, res, next) => {
   try {
-    const deliveries = await Delivery.find();
+    const { page = 1, limit = 10, keyword = '', status = '' } = req.query;
+    const query = {};
+
+    if (keyword) {
+      query.name = { $regex: keyword, $options: 'i' };
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const data = await Delivery.find(query)
+      .skip((page - 1) * limit)
+      .limit(+limit)
+      .sort({ createAt: -1 });
+
+    const total = await Delivery.countDocuments(query);
     res.status(200).json({
       status: 'success',
-      results: deliveries.length,
-      data: { deliveries },
+      total,
+      page,
+      limit,
+      data: { data },
       requestTime: req.requestTime,
     });
   } catch (error) {
@@ -16,7 +41,7 @@ exports.getAllDelivery = async (req, res, next) => {
 };
 exports.getDeliveryById = async (req, res, next) => {
   try {
-    const delivery = await Delivery.findById(req.params.id);
+    const delivery = await Delivery.findById(req.params.id).populate('orderId');
     if (!delivery) {
       return res.status(404).json({
         status: 'fail',
@@ -25,7 +50,6 @@ exports.getDeliveryById = async (req, res, next) => {
     } else {
       res.status(200).json({
         status: 'success',
-        results: delivery.length,
         data: { delivery },
         requestTime: req.requestTime,
       });
@@ -36,17 +60,27 @@ exports.getDeliveryById = async (req, res, next) => {
 };
 exports.createDelivery = async (req, res, next) => {
   try {
-    const newDelivery = await Delivery.create(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: { newDelivery },
-      requestTime: req.requestTime,
-    });
+    const deliveryNo = generateDeliveryNo();
+
+    const isExit = await Delivery.findone(deliveryNo);
+    if (isExit) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '订单已存在',
+      });
+    } else {
+      const newDelivery = await Delivery.create({ ...req.body, deliveryNo });
+      res.status(201).json({
+        status: 'success',
+        data: { newDelivery },
+        requestTime: req.requestTime,
+      });
+    }
   } catch (error) {
     next(error);
   }
 };
-exports.updateDelivery = async (req, res, next) => {
+exports.updateDeliveryById = async (req, res, next) => {
   try {
     const delivery = await Delivery.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -68,7 +102,7 @@ exports.updateDelivery = async (req, res, next) => {
     next(error);
   }
 };
-exports.deleteDelivery = async (req, res, next) => {
+exports.deleteDeliveryById = async (req, res, next) => {
   try {
     const delivery = await Delivery.findByIdAndDelete(req.params.id);
     if (!delivery) {
@@ -82,6 +116,28 @@ exports.deleteDelivery = async (req, res, next) => {
         message: 'delete successful',
         data: null,
         requestTime: req.requestTime,
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteManyDelivery = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '请选择删除的配送订单',
+      });
+    } else {
+      await Delivery.deleteMany({ _id: { $in: ids } });
+      res.satatus(200).json({
+        status: 'success',
+        data: null,
+        message: '配送订单批量删除成功',
       });
     }
   } catch (error) {
