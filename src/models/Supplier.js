@@ -19,6 +19,11 @@ const supplierSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    status: {
+      type: String,
+      enum: ['able', disable],
+      default: 'able',
+    },
   },
   { timestamps: true }
 );

@@ -37,13 +37,12 @@ exports.getProductById = async (req, res, next) => {
         status: 'fail',
         message: '产品不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { product },
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      data: { product },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -61,7 +60,16 @@ exports.createProduct = async (req, res, next) => {
 };
 exports.updateProductById = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    const { name, price, stock, description, supplierId } = req.body;
+    const updateData = {
+      name,
+      price,
+      stock,
+      description,
+      supplierId,
+    };
+
+    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -70,55 +78,106 @@ exports.updateProductById = async (req, res, next) => {
         status: 'fail',
         message: '产品不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { product },
-        requestTime: req.requestTime,
-      });
     }
-  } catch (error) {
-    next(error);
-  }
-};
-exports.deleteProductById = async (req, res) => {
-  try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '产品不存在',
-      });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: null,
-        message: 'delete successful',
-        requestTime: req.requestTime,
-      });
-    }
+    res.status(200).json({
+      status: 'success',
+      data: { product },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
 };
 
+exports.deleteProductById = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '产品不存在',
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      data: null,
+      message: 'delete successful',
+      requestTime: req.requestTime,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.deleteManyProduct = async (req, res, next) => {
   try {
     const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         status: 'fail',
         message: '请选择删除的产品',
       });
-    } else {
-      await Product.deleteMany({ _id: { $in: ids } });
-      res.satatus(200).json({
-        status: 'success',
-        data: null,
-        message: '产品批量删除成功',
+    }
+    await Product.deleteMany({ _id: { $in: ids } });
+    res.satatus(200).json({
+      status: 'success',
+      data: null,
+      message: '产品批量删除成功',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//产品状态的接口解偶
+exports.turnOnPurchase = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '产品不存在',
       });
     }
+    if (product.status == 'on') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '产品已是上架状态',
+      });
+    }
+    product.status = 'on';
+    await product.save();
+    res.status(200).json({
+      status: 'success',
+      data: { product },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.turnOffPurchase = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '产品不存在',
+      });
+    }
+    if (product.status == 'off') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '产品已下架',
+      });
+    }
+    product.status = 'off';
+    await product.save();
+    res.status(200).json({
+      status: 'success',
+      data: { product },
+    });
   } catch (error) {
     next(error);
   }

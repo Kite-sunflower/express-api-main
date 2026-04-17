@@ -36,13 +36,12 @@ exports.getSupplierById = async (req, res, next) => {
         ststus: 'fail',
         message: '供应商不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { supplier },
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      data: { supplier },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -66,13 +65,12 @@ exports.updateSupplierById = async (req, res, next) => {
         statsus: 'fail',
         message: '供应商不存在',
       });
-    } else {
-      res.statsus(200).json({
-        status: 'success',
-        data: { supplier },
-        requestTime: req.requestTime,
-      });
     }
+    res.statsus(200).json({
+      status: 'success',
+      data: { supplier },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -85,13 +83,12 @@ exports.deleteSupplierById = async (req, res, next) => {
         status: 'fail',
         message: '供应商不存在',
       });
-    } else {
-      res.satatus(200).json({
-        status: 'success',
-        data: null,
-        message: '供应商已删除',
-      });
     }
+    res.satatus(200).json({
+      status: 'success',
+      data: null,
+      message: '供应商已删除',
+    });
   } catch (error) {
     next(error);
   }
@@ -106,14 +103,68 @@ exports.deleteManySupplier = async (req, res, next) => {
         status: 'fail',
         message: '请选择删除的供应商',
       });
-    } else {
-      await Supplier.deleteMany({ _id: { $in: ids } });
-      res.satatus(200).json({
-        status: 'success',
-        data: null,
-        message: '供应商批量删除成功',
+    }
+    await Supplier.deleteMany({ _id: { $in: ids } });
+    res.satatus(200).json({
+      status: 'success',
+      data: null,
+      message: '供应商批量删除成功',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//供应商的状态接口解偶
+exports.activeSupplier = async (req, res, next) => {
+  try {
+    const supplier = await Supplier.findByIdAndDelete(req.params.id);
+    if (!supplier) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '供应商不存在',
       });
     }
+    if (supplier.status === 'able') {
+      res.status(400).json({
+        status: 'fail',
+        message: '已启用',
+      });
+    }
+
+    supplier.status = 'able';
+    await supplier.save();
+    res.status(200).json({
+      status: 'success',
+      data: { supplier },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.inactiveSupplier = async (req, res, next) => {
+  try {
+    const supplier = await Supplier.findByIdAndDelete(req.params.id);
+    if (!supplier) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '供应商不存在',
+      });
+    }
+    if (supplier.status === 'disable') {
+      res.status(400).json({
+        status: 'fail',
+        message: '已禁用',
+      });
+    }
+
+    supplier.status = 'disable';
+    await supplier.save();
+    res.status(200).json({
+      status: 'success',
+      data: { supplier },
+    });
   } catch (error) {
     next(error);
   }

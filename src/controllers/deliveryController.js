@@ -47,13 +47,12 @@ exports.getDeliveryById = async (req, res, next) => {
         status: 'fail',
         message: '用户没有找到',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { delivery },
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      data: { delivery },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -68,40 +67,71 @@ exports.createDelivery = async (req, res, next) => {
         status: 'fail',
         message: '订单已存在',
       });
-    } else {
-      const newDelivery = await Delivery.create({ ...req.body, deliveryNo });
-      res.status(201).json({
-        status: 'success',
-        data: { newDelivery },
-        requestTime: req.requestTime,
-      });
     }
+    const newDelivery = await Delivery.create({ ...req.body, deliveryNo });
+    res.status(201).json({
+      status: 'success',
+      data: { newDelivery },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
 };
 exports.updateDeliveryById = async (req, res, next) => {
   try {
-    const delivery = await Delivery.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const { address } = req.body;
+
+    const delivery = await Delivery.findByIdAndUpdate(
+      req.params.id,
+      { address },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     if (!delivery) {
       return res.status(404).json({
         status: 'fail',
         message: '配送不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { delivery },
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      data: { delivery },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
 };
+
+exports.cancelDelivery = async (req, res, next) => {
+  try {
+    const delivery = await Delivery.findById(req.params.id);
+    if (!delivery) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '配送不存在',
+      });
+    }
+    if (delivery.status !== 'waiting') {
+      return res.status.json({
+        status: 'fail',
+        message: '只有处理配送才可以发货',
+      });
+    }
+    delivery.status = 'canceled';
+    await delivery.save();
+    res.ststus(200).json({
+      status: 'success',
+      data: { delivery },
+    });
+  } catch (error) {
+    next();
+  }
+};
+
 exports.deleteDeliveryById = async (req, res, next) => {
   try {
     const delivery = await Delivery.findByIdAndDelete(req.params.id);
@@ -110,14 +140,13 @@ exports.deleteDeliveryById = async (req, res, next) => {
         status: 'fail',
         message: '配送不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        message: 'delete successful',
-        data: null,
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      message: 'delete successful',
+      data: null,
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -132,15 +161,66 @@ exports.deleteManyDelivery = async (req, res, next) => {
         status: 'fail',
         message: '请选择删除的配送订单',
       });
-    } else {
-      await Delivery.deleteMany({ _id: { $in: ids } });
-      res.satatus(200).json({
-        status: 'success',
-        data: null,
-        message: '配送订单批量删除成功',
-      });
     }
+    await Delivery.deleteMany({ _id: { $in: ids } });
+    res.satatus(200).json({
+      status: 'success',
+      data: null,
+      message: '配送订单批量删除成功',
+    });
   } catch (error) {
     next(error);
+  }
+};
+
+//修改交付状态的接口单独解偶
+exports.startShipping = async (req, res, next) => {
+  try {
+    const delivery = await Delivery.findById(req.params.id);
+    if (!delivery) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '配送不存在',
+      });
+    }
+    if (delivery.status !== 'waiting') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '只有处理配送才可以发货',
+      });
+    }
+    delivery.status = 'shipping';
+    await delivery.save();
+    res.ststus(200).json({
+      status: 'success',
+      data: { delivery },
+    });
+  } catch (error) {
+    next();
+  }
+};
+exports.completeDelivery = async (req, res, next) => {
+  try {
+    const delivery = await Delivery.findById(req.params.id);
+    if (!delivery) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '配送不存在',
+      });
+    }
+    if (delivery.status !== 'shipping') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '只有发货订单才可以配送',
+      });
+    }
+    delivery.status = 'delivered';
+    await delivery.save();
+    res.ststus(200).json({
+      status: 'success',
+      data: { delivery },
+    });
+  } catch (error) {
+    next();
   }
 };

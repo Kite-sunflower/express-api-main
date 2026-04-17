@@ -65,13 +65,12 @@ exports.getOrderById = async (req, res, next) => {
         status: 'fail',
         message: '订单不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { order },
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -86,21 +85,28 @@ exports.createOrder = async (req, res, next) => {
         status: 'fail',
         message: '订单已存在',
       });
-    } else {
-      const newOrder = await Order.create({ ...isExitreq.body, orderNo });
-      res.status(201).json({
-        status: 'success',
-        data: { newOrder },
-        requestTime: req.requestTime,
-      });
     }
+    const newOrder = await Order.create({ ...isExitreq.body, orderNo });
+    res.status(201).json({
+      status: 'success',
+      data: { newOrder },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
 };
+
 exports.updateOrderById = async (req, res, next) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
+    const { quantity, totalPrice } = req.body;
+
+    const updateData = {
+      quantity,
+      totalPrice,
+    };
+
+    const order = await Order.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -109,13 +115,12 @@ exports.updateOrderById = async (req, res, next) => {
         status: 'fail',
         message: '订单不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        data: { order },
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -128,14 +133,13 @@ exports.deleteOrderById = async (req, res, next) => {
         status: 'fail',
         message: '订单不存在',
       });
-    } else {
-      res.status(200).json({
-        status: 'success',
-        message: 'delete successful',
-        data: null,
-        requestTime: req.requestTime,
-      });
     }
+    res.status(200).json({
+      status: 'success',
+      message: 'delete successful',
+      data: null,
+      requestTime: req.requestTime,
+    });
   } catch (error) {
     next(error);
   }
@@ -150,14 +154,119 @@ exports.deleteManyOrder = async (req, res, next) => {
         status: 'fail',
         message: '请选择删除的订单',
       });
-    } else {
-      await Order.deleteMany({ _id: { $in: ids } });
-      res.satatus(200).json({
-        status: 'success',
-        data: null,
-        message: '订单批量删除成功',
+    }
+    await Order.deleteMany({ _id: { $in: ids } });
+    res.satatus(200).json({
+      status: 'success',
+      data: null,
+      message: '订单批量删除成功',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 修改订单状态的接口单独解偶
+exports.payOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.ststus(400).json({
+        status: 'fail',
+        message: '订单不存在',
       });
     }
+    if (order.status !== 'pending') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '只有代付款订单才可以付款',
+      });
+    }
+    order.status = 'paid';
+    await order.save();
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.shipOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '订单不存在',
+      });
+    }
+
+    if (order.status !== 'paid') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '只有付款订单才可以发货',
+      });
+    }
+    order.status = 'shipped';
+    await order.save();
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.completeOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.pqrams.id);
+    if (!order) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '订单不存在',
+      });
+    }
+    if (order.status !== 'shipped') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '只有发货订单才可以完成',
+      });
+    }
+    order.status = 'completed';
+    await order.save();
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.cancelOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '订单不存在',
+      });
+    }
+
+    if (order.status !== 'pending') {
+      return res.status(400).json({
+        status: 'fail',
+        message: '只有处理订单才可以取消',
+      });
+    }
+    order.status = 'canceled';
+    await order.save();
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+    });
   } catch (error) {
     next(error);
   }

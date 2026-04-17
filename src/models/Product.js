@@ -30,6 +30,11 @@ const productSchema = new mongoose.Schema(
       ref: 'Supplier',
       required: true,
     },
+    status: {
+      type: String,
+      enum: ['on', 'off'],
+      default: 'on',
+    },
   },
   { timestamps: true }
 );
