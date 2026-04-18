@@ -1,18 +1,19 @@
-const express = require(express);
+const express = require('express');
 const router = express.Router();
+
 const { getAllorders, getOrderById, createOrder, updateOrderById, payOrder, shipOrder, completeOrder, cancelOrder, deleteOrderById, deleteManyOrder } = require('../controllers/orderController');
+const { protect, onlySelf, restrictToAdmin } = require('../middlewares/auth');
 
-router.get('/', getAllorders);
-router.get('/:id', getOrderById);
-router.post('/', createOrder);
+router.get('/', protect, restrictToAdmin, getAllorders);
+router.get('/:id', protect, onlySelf, getOrderById);
+router.post('/', protect, createOrder);
+router.put('/:id', protect, restrictToAdmin, updateOrderById);
+router.delete('/:id', protect, restrictToAdmin, deleteOrderById);
+router.delete('/deleteManyOrder', protect, restrictToAdmin, deleteManyOrder);
 
-router.pup('/:id', updateOrderById);
-router.post('/:id/pay', payOrder);
-router.post('/:id/ship', shipOrder);
-router.post('/:id/complete', completeOrder);
-router.post('/:id/camcel', cancelOrder);
-
-router.delete('/:id', deleteOrderById);
-router.delete('/deleteManyOrder', deleteManyOrder);
+router.post('/:id/pay', protect, restrictToAdmin, payOrder);
+router.post('/:id/ship', protect, restrictToAdmin, shipOrder);
+router.post('/:id/complete', protect, restrictToAdmin, completeOrder);
+router.post('/:id/cancel', protect, onlySelf, cancelOrder);
 
 module.exports = router;
