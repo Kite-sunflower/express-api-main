@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const requestTime = require('./middlewares/requestTime');
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
+const responseHander = require('./middlewares/responseHander');
 
 const productRoute = require('./routes/productRoute');
 const orderRoute = require('./routes/orderRoute');
@@ -23,6 +24,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(requestTime);
+app.use(responseHander);
 
 app.use('/api/product', productRoute);
 app.use('/api/order', orderRoute);

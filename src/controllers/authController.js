@@ -167,7 +167,7 @@ exports.sendResetCode = async (req, res, next) => {
 
     //保存验证码+过期时间
     user.resetcode = code;
-    user.restcodeExpire = expireTime;
+    user.restCodeExpire = expireTime;
     await user.save();
 
     console.log('重置密码验证码', code);
@@ -190,7 +190,7 @@ exports.resetPwd = async (req, res, next) => {
     const user = await User.findOne({
       username,
       resetcode: code,
-      restcodeExpire: { $gt: Date.now() },
+      restCodeExpire: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -205,7 +205,7 @@ exports.resetPwd = async (req, res, next) => {
 
     //清空验证码
     user.resetcode = undefined;
-    user.restcodeExpire = undefined;
+    user.restCodeExpire = undefined;
 
     await user.save();
 

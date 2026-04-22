@@ -1,4 +1,3 @@
-const { required } = require('joi');
 const mongoose = require('mongoose');
 
 const { ObjectId } = mongoose.Schema.Types;
@@ -16,9 +15,9 @@ const deliverySchema = new mongoose.Schema(
       required: true,
     },
     address: {
-      type: String,
-      required: true,
-      trim: true,
+      name: String,
+      phone: String,
+      address: String,
     },
     status: {
       type: String,

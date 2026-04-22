@@ -174,6 +174,13 @@ exports.inactiveUser = async (req, res, next) => {
       });
     }
 
+    if (user.role == 'admin') {
+      return res.status(403).json({
+        status: 'fail',
+        message: '管理员不可禁用',
+      });
+    }
+
     if (user.status === 'inactive') {
       return res.status(400).json({
         status: 'fail',
@@ -185,6 +192,46 @@ exports.inactiveUser = async (req, res, next) => {
     await user.save();
     res.status(200).json({
       status: 'success',
+      data: { user },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//用户角色设置
+exports.roleSetup = async (req, res, next) => {
+  try {
+    const { targetRole } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: '用户不存在',
+      });
+    }
+
+    const allowRole = ['user', 'salesperson'];
+
+    if (!allowRole.includes(targetRole)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: '仅支持 user/salesperson',
+      });
+    }
+
+    if (user.role === targetRole) {
+      return res.status(400).json({
+        status: 'fail',
+        message: `用户角色已是 ${targetRole}`,
+      });
+    }
+
+    user.role = targetRole;
+    await user.save();
+    res.status(200).json({
+      status: 'success',
+      message: '角色修改成功',
       data: { user },
     });
   } catch (error) {

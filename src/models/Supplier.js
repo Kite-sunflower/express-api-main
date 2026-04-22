@@ -1,4 +1,3 @@
-const { truncates } = require('bcryptjs');
 const mongoose = require('mongoose');
 
 const supplierSchema = new mongoose.Schema(
@@ -21,7 +20,7 @@ const supplierSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['able', disable],
+      enum: ['able', 'disable'],
       default: 'able',
     },
   },

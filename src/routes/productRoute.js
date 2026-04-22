@@ -2,16 +2,16 @@ const express = require('express');
 const router = express.Router();
 
 const { getAllSuppliers, getSupplierById, createSupplier, updateSupplierById, deleteSupplierById, deleteManySupplier, activeSupplier, inactiveSupplier } = require('../controllers/supplierController');
-const { protect, onlySelf, restrictToAdmin } = require('../middlewares/auth');
+const { protect, onlySelf, requireAdmin } = require('../middlewares/auth');
 
-router.get('/', protect, restrictToAdmin, getAllSuppliers);
-router.get('/:id', protect, restrictToAdmin, getSupplierById);
-router.post('/', protect, restrictToAdmin, createSupplier);
-router.put('/:id', protect, restrictToAdmin, updateSupplierById);
-router.delete('/:id', protect, restrictToAdmin, deleteSupplierById);
-router.delete('/deleteManySupplier', protect, restrictToAdmin, deleteManySupplier);
+router.get('/', protect, requireAdmin, getAllSuppliers);
+router.get('/:id', protect, requireAdmin, getSupplierById);
+router.post('/', protect, requireAdmin, createSupplier);
+router.put('/:id', protect, requireAdmin, updateSupplierById);
+router.delete('/:id', protect, requireAdmin, deleteSupplierById);
+router.delete('/deleteManySupplier', protect, requireAdmin, deleteManySupplier);
 
-router.post('/:id/activated', protect, restrictToAdmin, activeSupplier);
-router.post('/:id/deactivated', protect, restrictToAdmin, inactiveSupplier);
+router.post('/:id/activated', protect, requireAdmin, activeSupplier);
+router.post('/:id/deactivated', protect, requireAdmin, inactiveSupplier);
 
 module.exports = router;

@@ -21,12 +21,16 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     resetcode: String,
-    restcodeExpire: Date,
-
+    restCodeExpire: Date,
+    address: {
+      name: String,
+      phone: String,
+      address: String,
+    },
     //管理员用户
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'admin', 'salesperson'],
       default: 'user',
     },
     status: {

@@ -1,5 +1,6 @@
-const requestTime = require('../middlewares/requestTime');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
+const User = require('../models/User');
 
 //生成订单号
 function generateOrderNo() {
@@ -45,14 +46,7 @@ exports.getAllorders = async (req, res, next) => {
     const total = await Order.countDocuments(query);
 
     //返回数据
-    res.status(200).json({
-      status: 'success',
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      data: { orders },
-      requestTime: req.requestTime,
-    });
+    res.sendSuccess(200, { total, page, limit, orders }, '获取订单列表成功');
   } catch (error) {
     next(error);
   }
@@ -61,66 +55,109 @@ exports.getOrderById = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id).populate('productId').populate('userId');
     if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '订单不存在',
-      });
+      return res.sendError(400, '订单不存在');
     }
-    res.status(200).json({
-      status: 'success',
-      data: { order },
-      requestTime: req.requestTime,
-    });
+    res.sendSuccess(200, order, '获取订单详情成功');
   } catch (error) {
     next(error);
   }
 };
 exports.createOrder = async (req, res, next) => {
+  // 用户自己下单
+  const session = await mongoose.startSession();
+  session.startTransaction(); // 开启事务
+
   try {
+    const { items, address, payType, remark } = req.body;
+
+    const userId = req.user._id; // 从token获取自己的ID
+
+    // ================= 2. 校验所有商品 + 库存（只检查，不扣！）=================
+    let totalPrice = 0;
+    const orderItems = [];
+
+    for (const item of items) {
+      const product = await Product.findOneAndUpdate(
+        {
+          _id: item.productId,
+          stock: { $gte: item.quantity },
+        },
+        { $inc: { stock: -item.quantity } }, // 原子扣减：不会超卖
+        { new: true, session } // 绑定事务
+      );
+
+      if (!product) {
+        return res.sendError(400, '商品不存在');
+      }
+
+      // 存入订单商品快照
+      orderItems.push({
+        productId: product._id,
+        productName: product.name,
+        price: product.price,
+        quantity: item.quantity,
+      });
+
+      // 计算总价
+      totalPrice += product.price * item.quantity;
+    }
+
+    // ================= 3. 生成订单号 =================
     const orderNo = generateOrderNo();
 
-    const isExit = await Order.findOne({ orderNo });
-    if (isExit) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '订单已存在',
-      });
-    }
-    const newOrder = await Order.create({ ...isExitreq.body, orderNo });
-    res.status(201).json({
-      status: 'success',
-      data: { newOrder },
-      requestTime: req.requestTime,
-    });
+    // ================= 4. 【先创建订单】 =================
+    const order = await Order.create(
+      [
+        {
+          orderNo,
+          userId, // 购买人：自己
+          createdBy: userId, // 创建人：自己
+          createType: 'user', // 标记：用户自己下单
+          items: orderItems,
+          totalPrice,
+          address,
+          payType: payType || 'card',
+          remark: remark || '',
+        },
+      ],
+      { session }
+    );
+
+    // ================= 5. 提交事务 =================
+    await session.commitTransaction();
+    session.endSession();
+
+    // ================= 6. 返回成功 =================
+    return sendSuccess(200, order, '订单创建成功');
   } catch (error) {
+    // 失败 → 全部回滚
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };
 
 exports.updateOrderById = async (req, res, next) => {
   try {
-    const { quantity, totalPrice } = req.body;
+    const { address, payType, remark } = req.body;
 
     const updateData = {
-      quantity,
-      totalPrice,
+      address,
+      payType,
+      remark,
     };
 
-    const order = await Order.findByIdAndUpdate(req.params.id, updateData, {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.sendError(404, '订单不存在');
+    }
+
+    const update = await Order.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '订单不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { order },
-      requestTime: req.requestTime,
-    });
+
+    res.res.sendSuccess(200, update, '订单修改成功');
   } catch (error) {
     next(error);
   }
@@ -129,17 +166,10 @@ exports.deleteOrderById = async (req, res, next) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);
     if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '订单不存在',
-      });
+      return res.sendError(404, '订单不存在');
     }
-    res.status(200).json({
-      status: 'success',
-      message: 'delete successful',
-      data: null,
-      requestTime: req.requestTime,
-    });
+
+    res.sendSuccess(200, order, '订单删除成功');
   } catch (error) {
     next(error);
   }
