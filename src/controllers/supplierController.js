@@ -116,53 +116,38 @@ exports.deleteManySupplier = async (req, res, next) => {
 };
 
 //供应商的状态接口解偶
-exports.activeSupplier = async (req, res, next) => {
+exports.changeStatus = async (req, res, next) => {
   try {
-    const supplier = await Supplier.findByIdAndDelete(req.params.id);
+    const { targetStatus } = req.body;
+    const supplier = await Supplier.findById(req.params.id);
     if (!supplier) {
       return res.status(404).json({
         status: 'fail',
         message: '供应商不存在',
       });
     }
-    if (supplier.status === 'able') {
-      res.status(400).json({
+
+    const allowStatus = ['active', 'inactive'];
+
+    if (!allowStatus.includes(targetStatus)) {
+      return res.status(400).json({
         status: 'fail',
-        message: '已启用',
+        message: '仅支持 active/inactive',
       });
     }
 
-    supplier.status = 'able';
+    if (supplier.status === targetStatus) {
+      return res.status(400).json({
+        status: 'fail',
+        message: `供应商状态已是 ${targetStatus}`,
+      });
+    }
+
+    supplier.status = targetStatus;
     await supplier.save();
     res.status(200).json({
       status: 'success',
-      data: { supplier },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.inactiveSupplier = async (req, res, next) => {
-  try {
-    const supplier = await Supplier.findByIdAndDelete(req.params.id);
-    if (!supplier) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '供应商不存在',
-      });
-    }
-    if (supplier.status === 'disable') {
-      res.status(400).json({
-        status: 'fail',
-        message: '已禁用',
-      });
-    }
-
-    supplier.status = 'disable';
-    await supplier.save();
-    res.status(200).json({
-      status: 'success',
+      message: '状态修改成功',
       data: { supplier },
     });
   } catch (error) {

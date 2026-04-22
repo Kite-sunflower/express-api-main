@@ -88,6 +88,7 @@ exports.getInfo = async (req, res) => {
     const user = req.user;
     res.json({
       status: 'success',
+      message: '获取信息成功',
       data: {
         _id: user._id,
         username: user.username,

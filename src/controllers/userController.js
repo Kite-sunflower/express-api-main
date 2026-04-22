@@ -135,9 +135,10 @@ exports.deleteManyUser = async (req, res, next) => {
   }
 };
 
-//用户权限接口解偶
-exports.activeUser = async (req, res, next) => {
+//用户状态设置
+exports.statusSetup = async (req, res, next) => {
   try {
+    const { targetStatus } = req.body;
     const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({
@@ -146,52 +147,27 @@ exports.activeUser = async (req, res, next) => {
       });
     }
 
-    if (user.status === 'active') {
+    const allowStatus = ['active', 'inactive'];
+
+    if (!allowStatus.includes(targetRole)) {
       return res.status(400).json({
         status: 'fail',
-        message: '用户已是启用状态',
+        message: '仅支持 active/inactive',
       });
     }
 
-    user.status = 'active';
+    if (user.status === targetStatus) {
+      return res.status(400).json({
+        status: 'fail',
+        message: `用户状态已是 ${targetStatus}`,
+      });
+    }
+
+    user.status = targetStatus;
     await user.save();
     res.status(200).json({
       status: 'success',
-      data: { user },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.inactiveUser = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
-
-    if (user.role == 'admin') {
-      return res.status(403).json({
-        status: 'fail',
-        message: '管理员不可禁用',
-      });
-    }
-
-    if (user.status === 'inactive') {
-      return res.status(400).json({
-        status: 'fail',
-        message: '用户已是禁用状态',
-      });
-    }
-
-    user.status = 'inactive';
-    await user.save();
-    res.status(200).json({
-      status: 'success',
+      message: '状态修改成功',
       data: { user },
     });
   } catch (error) {

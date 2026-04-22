@@ -130,35 +130,9 @@ exports.deleteManyProduct = async (req, res, next) => {
 };
 
 //产品状态的接口解偶
-exports.turnOnPurchase = async (req, res, next) => {
+exports.changeStatus = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '产品不存在',
-      });
-    }
-    if (product.status == 'on') {
-      return res.status(400).json({
-        status: 'fail',
-        message: '产品已是上架状态',
-      });
-    }
-    product.status = 'on';
-    await product.save();
-    res.status(200).json({
-      status: 'success',
-      data: { product },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.turnOffPurchase = async (req, res, next) => {
-  try {
+    const { targetStatus } = req.body;
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({
@@ -166,16 +140,28 @@ exports.turnOffPurchase = async (req, res, next) => {
         message: '产品不存在',
       });
     }
-    if (product.status == 'off') {
+
+    const allowStatus = ['on', 'off'];
+
+    if (!allowStatus.includes(targetStatus)) {
       return res.status(400).json({
         status: 'fail',
-        message: '产品已下架',
+        message: '仅支持 on/off',
       });
     }
-    product.status = 'off';
+
+    if (product.status === targetStatus) {
+      return res.status(400).json({
+        status: 'fail',
+        message: `产品状态已是 ${targetStatus}`,
+      });
+    }
+
+    product.status = targetStatus;
     await product.save();
     res.status(200).json({
       status: 'success',
+      message: '状态修改成功',
       data: { product },
     });
   } catch (error) {
