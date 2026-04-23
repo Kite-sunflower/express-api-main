@@ -6,16 +6,26 @@ const { contentSecurityPolicy } = require('helmet');
 //注册接口
 exports.register = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
+
+    if (!username && !email) {
+      return res.sendError(400, '用户名和邮箱必须填写一个');
+    }
 
     //检查用户名是否已存在
-    const userExits = await User.find({ username });
-    if (username) {
-      return res.status(400).json({ message: '用户名已存在' });
+    const userExits = await User.findOne({ username });
+    if (userExits) {
+      return res.sendError(400, '用户名已存在');
+    }
+    //检查邮箱是否重复（必须加！）
+    const emailExits = await User.findOne({ email });
+    if (emailExits) {
+      return res.sendError(400, '邮箱已被注册');
     }
     const user = await User.create({
       username,
       password,
+      email,
     });
     res.status(201).json({
       message: '注册成功',
@@ -25,6 +35,7 @@ exports.register = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('【注册接口错误】', error);
     res.status(500).json({
       message: '服务器错误',
     });
@@ -32,12 +43,20 @@ exports.register = async (req, res) => {
 };
 
 //登陆接口
-expotts.login = async (req, res) => {
+exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { account, password } = req.body;
 
-    //1.找用户
-    const user = await User.findOne({ username });
+    //1.必须传账号
+    if (!account) {
+      return res.sendError(400, '请输入用户名或邮箱');
+    }
+
+    //根据账号查找用户(用户名/邮箱)
+    const user = await User.findOne({
+      $or: [{ username: account }, { email: account }],
+    }).select('+password');
+
     if (!user) {
       return res.status(400).json({
         message: '用户不存在',
@@ -53,8 +72,8 @@ expotts.login = async (req, res) => {
     }
 
     //3.生成token
-    const token = jwd.sign(
-      { id: user._id, uesename: user.username },
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
       'mySecretKey', //密钥
       { expiresIn: '7d' } //7天过期
     );

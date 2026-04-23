@@ -1,7 +1,7 @@
-const express = require(express);
+const express = require('express');
 const router = express.Router();
 
-const { getAllSuppliers, getSupplierById, createSupplier, updateSupplierById, deleteSupplierById, deleteManySupplier, changeStatus, changeStatus } = require('../controllers/supplierController');
+const { getAllSuppliers, getSupplierById, createSupplier, updateSupplierById, deleteSupplierById, deleteManySupplier, changeStatus } = require('../controllers/supplierController');
 const { protect, onlySelf, requireAdmin } = require('../middlewares/auth');
 
 router.get('/', protect, requireAdmin, getAllSuppliers);

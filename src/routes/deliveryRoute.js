@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllDeliveries, getDeliveryById, createDelivery, updateDeliveryById, startShipping, completeDelivery, cancelDelivery, deleteDeliveryById, deleteManyDelivery } = require('../controllers/deliveryController');
+const { getAllDelivery, getDeliveryById, createDelivery, updateDeliveryById, startShipping, completeDelivery, cancelDelivery, deleteDeliveryById, deleteManyDelivery } = require('../controllers/deliveryController');
 const { protect, requireAdmin } = require('../middlewares/auth');
 
-router.get('/', protect, requireAdmin, getAllDeliveries);
+router.get('/', protect, requireAdmin, getAllDelivery);
 router.get('/:id', protect, requireAdmin, getDeliveryById);
 router.post('/', protect, requireAdmin, createDelivery);
 router.put('/:id', protect, requireAdmin, updateDeliveryById);

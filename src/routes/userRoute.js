@@ -4,7 +4,7 @@ const router = express.Router();
 const { getAllUsers, getUserById, createUser, updateUserById, deleteUserById, deleteManyUser, statusSetup, roleSetup } = require('../controllers/userController');
 const { protect, requireAdmin, onlySelf } = require('../middlewares/auth');
 
-router.get('/', protect.requireAdmin, getAllUsers);
+router.get('/', protect, requireAdmin, getAllUsers);
 router.get('/:id', protect, onlySelf, getUserById);
 router.post('/', protect, requireAdmin, createUser);
 router.put('/:id', protect, onlySelf, updateUserById);
