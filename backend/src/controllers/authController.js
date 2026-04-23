@@ -1,239 +1,104 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const { contentSecurityPolicy } = require('helmet');
+const { findUserByAccount, verifyPassword, generateToken, updatePassword, sendResetCode, resetPassword } = require('../services/authService');
 
-//注册接口
+// 注册接口
 exports.register = async (req, res) => {
   try {
-    const { username, password, email } = req.body;
-
-    if (!username && !email) {
-      return res.sendError(400, '用户名和邮箱必须填写一个');
-    }
-
-    //检查用户名是否已存在
-    const userExits = await User.findOne({ username });
-    if (userExits) {
-      return res.sendError(400, '用户名已存在');
-    }
-    //检查邮箱是否重复（必须加！）
-    const emailExits = await User.findOne({ email });
-    if (emailExits) {
-      return res.sendError(400, '邮箱已被注册');
-    }
-    const user = await User.create({
-      username,
-      password,
-      email,
-    });
-    res.status(201).json({
-      message: '注册成功',
-      user: {
+    const user = await createUser(req.body);
+    res.sendSuccess(
+      201,
+      {
         id: user._id,
         username: user.username,
+        email: user.email,
       },
-    });
-  } catch (error) {
-    console.error('【注册接口错误】', error);
-    res.status(500).json({
-      message: '服务器错误',
-    });
+      '注册成功'
+    );
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//登陆接口
+// 登录接口
 exports.login = async (req, res) => {
   try {
     const { account, password } = req.body;
 
-    //1.必须传账号
-    if (!account) {
-      return res.sendError(400, '请输入用户名或邮箱');
-    }
+    if (!account) return res.sendError(400, '请输入用户名或邮箱');
+    if (!password) return res.sendError(400, '请输入密码');
 
-    //根据账号查找用户(用户名/邮箱)
-    const user = await User.findOne({
-      $or: [{ username: account }, { email: account }],
-    }).select('+password');
+    const user = await findUserByAccount(account);
+    await verifyPassword(password, user.password);
 
-    if (!user) {
-      return res.status(400).json({
-        message: '用户不存在',
-      });
-    }
+    const token = generateToken(user);
 
-    //2.检验密码，调用model里的方法
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({
-        message: '密码错误',
-      });
-    }
-
-    //3.生成token
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      'mySecretKey', //密钥
-      { expiresIn: '7d' } //7天过期
-    );
-
-    //返回成功信息
-    res.json({
-      message: '登陆成功',
-      token: {
+    res.sendSuccess(
+      200,
+      {
         id: user._id,
         username: user.username,
+        token,
       },
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: '服务器错误',
-    });
+      '登录成功'
+    );
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//退出登录
+// 退出登录
 exports.logout = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: '退出登录成功',
-  });
+  res.sendSuccess(200, null, '退出登录成功');
 };
 
-//获取当前用户登录信息
+// 获取当前登录信息
 exports.getInfo = async (req, res) => {
   try {
     const user = req.user;
-    res.json({
-      status: 'success',
-      message: '获取信息成功',
-      data: {
+    res.sendSuccess(
+      200,
+      {
         _id: user._id,
         username: user.username,
         email: user.email,
         role: user.role,
         createdAt: user.createdAt,
       },
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: 'fail',
-      message: '获取信息失败',
-    });
+      '获取信息成功'
+    );
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//修改密码
-exports.updatePwd = async (req, res, next) => {
+// 修改密码
+exports.updatePwd = async (req, res) => {
   try {
-    //获取参数
     const { oldPwd, newPwd } = req.body;
-
-    //当前登录用户 id(来自鉴权中间件 req.user)
-    const userId = req.user._id;
-
-    //查用户，拿到加密密码
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
-    //对比旧密码是否正确
-    const isOk = await bcrypt.compare(oldPwd, user.password);
-    if (!isOk) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '旧密码错误',
-      });
-    }
-    //加密新密码
-    const salt = await bcrypt.genSalt(10);
-    const hashPwd = await bcrypt.hash(newPwd, salt);
-
-    //更新密码
-    user.password = hashPwd;
-    await user.save();
-
-    res.status(201).json({
-      status: 'success',
-      message: '密码修改成功,请重新登录',
-    });
-  } catch (error) {
-    next();
+    await updatePassword(req.user._id, oldPwd, newPwd);
+    res.sendSuccess(200, null, '密码修改成功，请重新登录');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//忘记密码，发送验证码
-exports.sendResetCode = async (req, res, next) => {
+// 发送验证码
+exports.sendResetCode = async (req, res) => {
   try {
     const { username } = req.body;
-
-    //验证账号是否存在
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({
-        status: 'fial',
-        message: '账号不存在',
-      });
-    }
-    //生成6位数字验证码
-    const code = Math.floor(100000 + Math.random() * 900000);
-
-    //验证码过期时间5分钟
-    const expireTime = Date.now() + 5 * 60 * 1000;
-
-    //保存验证码+过期时间
-    user.resetcode = code;
-    user.restCodeExpire = expireTime;
-    await user.save();
-
-    console.log('重置密码验证码', code);
-
-    res.status(200).json({
-      status: 'success',
-      message: '验证码已发送',
-    });
-  } catch (error) {
-    next();
+    await sendResetCode(username);
+    res.sendSuccess(200, null, '验证码已发送');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//忘记密码；重置密码
-exports.resetPwd = async (req, res, next) => {
+// 重置密码
+exports.resetPwd = async (req, res) => {
   try {
     const { username, code, newPwd } = req.body;
-
-    //查询用户+验证码 是否匹配，是否过期
-    const user = await User.findOne({
-      username,
-      resetcode: code,
-      restCodeExpire: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '验证码错误或者已过期',
-      });
-    }
-    //加密新密码
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPwd, salt);
-
-    //清空验证码
-    user.resetcode = undefined;
-    user.restCodeExpire = undefined;
-
-    await user.save();
-
-    res.status(200).json({
-      status: 'success',
-      message: '密码重置成功,请前往登录',
-    });
-  } catch (error) {
-    next();
+    await resetPassword(username, code, newPwd);
+    res.sendSuccess(200, null, '密码重置成功，请前往登录');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };

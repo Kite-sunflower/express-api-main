@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllProducts, getProductById, createProduct, updateProductById, deleteProductById, deleteManyProduct, changeStatus } = require('../controllers/productControlller');
+const { getAll, getOne, create, update, deleteProduct, deleteMany, updateStatus } = require('../controllers/productControlller');
 const { protect, onlySelf, requireAdmin } = require('../middlewares/auth');
 
-router.get('/', protect, requireAdmin, getAllProducts);
-router.get('/:id', protect, requireAdmin, getProductById);
-router.post('/', protect, requireAdmin, createProduct);
-router.put('/:id', protect, requireAdmin, updateProductById);
-router.delete('/:id', protect, requireAdmin, deleteProductById);
-router.delete('/deleteManySupplier', protect, requireAdmin, deleteManyProduct);
+router.get('/', protect, requireAdmin, getAll);
+router.get('/:id', protect, requireAdmin, getOne);
+router.post('/', protect, requireAdmin, create);
+router.put('/:id', protect, requireAdmin, update);
+router.delete('/:id', protect, requireAdmin, deleteProduct);
+router.delete('/deleteManySupplier', protect, requireAdmin, deleteMany);
 
-router.post('/:id/changeStatus', protect, requireAdmin, changeStatus);
+router.post('/:id/status', protect, requireAdmin, updateStatus);
 
 module.exports = router;

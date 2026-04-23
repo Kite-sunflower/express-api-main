@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllUsers, getUserById, createUser, updateUserById, deleteUserById, deleteManyUser, statusSetup, roleSetup } = require('../controllers/userController');
+const { getAll, getOne, create, update, deleteUser, deleteMany, updateStatus, updateRole } = require('../controllers/userController');
 const { protect, requireAdmin, onlySelf } = require('../middlewares/auth');
 
-router.get('/', protect, requireAdmin, getAllUsers);
-router.get('/:id', protect, onlySelf, getUserById);
-router.post('/', protect, requireAdmin, createUser);
-router.put('/:id', protect, onlySelf, updateUserById);
-router.delete('/:id', protect, requireAdmin, deleteUserById);
-router.delete('/deleteManyUser', protect, requireAdmin, deleteManyUser);
+router.get('/', protect, requireAdmin, getAll);
+router.get('/:id', protect, onlySelf, getOne);
+router.post('/', protect, requireAdmin, create);
+router.put('/:id', protect, onlySelf, update);
+router.delete('/:id', protect, requireAdmin, deleteUser);
+router.delete('/batch', protect, requireAdmin, deleteMany);
 
-router.post('/:id/status', protect, requireAdmin, statusSetup);
+router.put('/:id/status', protect, requireAdmin, updateStatus);
 
-router.post('/:id/role', protect, requireAdmin, roleSetup);
+router.put('/:id/role', protect, requireAdmin, updateRole);
 
 module.exports = router;

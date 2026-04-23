@@ -1,226 +1,72 @@
-const requestTime = require('../middlewares/requestTime');
-const Delivery = require('../models/Delivery');
+const { createDelivery, findAllDeliveries, findDeliveryById, updateDeliveryById, deleteDeliveryById, deleteManyDelivery, updateDeliveryStatus } = require('../services/deliveryService');
 
-//生成发货单
-function generateDeliveryNo() {
-  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `SHIP_${date}_${random}`;
-}
-
-exports.getAllDelivery = async (req, res, next) => {
+// 1. 创建配送单
+exports.create = async (req, res) => {
   try {
-    const { page = 1, limit = 10, keyword = '', status = '' } = req.query;
-    const query = {};
-
-    if (keyword) {
-      query.name = { $regex: keyword, $options: 'i' };
-    }
-
-    if (status) {
-      query.status = status;
-    }
-
-    const data = await Delivery.find(query)
-      .skip((page - 1) * limit)
-      .limit(+limit)
-      .sort({ createAt: -1 });
-
-    const total = await Delivery.countDocuments(query);
-    res.status(200).json({
-      status: 'success',
-      total,
-      page,
-      limit,
-      data: { data },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.getDeliveryById = async (req, res, next) => {
-  try {
-    const delivery = await Delivery.findById(req.params.id).populate('orderId');
-    if (!delivery) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户没有找到',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { delivery },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.createDelivery = async (req, res, next) => {
-  try {
-    const deliveryNo = generateDeliveryNo();
-
-    const isExit = await Delivery.findone(deliveryNo);
-    if (isExit) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '订单已存在',
-      });
-    }
-    const newDelivery = await Delivery.create({ ...req.body, deliveryNo });
-    res.status(201).json({
-      status: 'success',
-      data: { newDelivery },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.updateDeliveryById = async (req, res, next) => {
-  try {
-    const { address } = req.body;
-
-    const delivery = await Delivery.findByIdAndUpdate(
-      req.params.id,
-      { address },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-    if (!delivery) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '配送不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { delivery },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const data = await createDelivery(req.body);
+    res.sendSuccess(201, data, '创建配送单成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.cancelDelivery = async (req, res, next) => {
+// 2. 获取所有配送单
+exports.getAll = async (req, res) => {
   try {
-    const delivery = await Delivery.findById(req.params.id);
-    if (!delivery) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '配送不存在',
-      });
-    }
-    if (delivery.status !== 'waiting') {
-      return res.status.json({
-        status: 'fail',
-        message: '只有处理配送才可以发货',
-      });
-    }
-    delivery.status = 'canceled';
-    await delivery.save();
-    res.ststus(200).json({
-      status: 'success',
-      data: { delivery },
-    });
-  } catch (error) {
-    next();
+    const items = await findAllDeliveries();
+    res.sendSuccess(200, { items }, '获取配送单列表成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.deleteDeliveryById = async (req, res, next) => {
+// 3. 获取单个配送单详情
+exports.getOne = async (req, res) => {
   try {
-    const delivery = await Delivery.findByIdAndDelete(req.params.id);
-    if (!delivery) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '配送不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      message: 'delete successful',
-      data: null,
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const data = await findDeliveryById(req.params.id);
+    res.sendSuccess(200, data, '获取配送单详情成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.deleteManyDelivery = async (req, res, next) => {
+// 4. 更新配送单
+exports.update = async (req, res) => {
   try {
-    const { ids } = req.body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '请选择删除的配送订单',
-      });
-    }
-    await Delivery.deleteMany({ _id: { $in: ids } });
-    res.satatus(200).json({
-      status: 'success',
-      data: null,
-      message: '配送订单批量删除成功',
-    });
-  } catch (error) {
-    next(error);
+    const data = await updateDeliveryById(req.params.id, req.body);
+    res.sendSuccess(200, data, '更新配送单成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//修改交付状态的接口单独解偶
-exports.startShipping = async (req, res, next) => {
+// 5. 删除配送单
+exports.deleteDelivery = async (req, res) => {
   try {
-    const delivery = await Delivery.findById(req.params.id);
-    if (!delivery) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '配送不存在',
-      });
-    }
-    if (delivery.status !== 'waiting') {
-      return res.status(400).json({
-        status: 'fail',
-        message: '只有处理配送才可以发货',
-      });
-    }
-    delivery.status = 'shipping';
-    await delivery.save();
-    res.ststus(200).json({
-      status: 'success',
-      data: { delivery },
-    });
-  } catch (error) {
-    next();
+    await deleteDeliveryById(req.params.id);
+    res.sendSuccess(200, null, '删除配送单成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
-exports.completeDelivery = async (req, res, next) => {
+
+// 6. 批量删除配送单
+exports.deleteMany = async (req, res) => {
   try {
-    const delivery = await Delivery.findById(req.params.id);
-    if (!delivery) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '配送不存在',
-      });
-    }
-    if (delivery.status !== 'shipping') {
-      return res.status(400).json({
-        status: 'fail',
-        message: '只有发货订单才可以配送',
-      });
-    }
-    delivery.status = 'delivered';
-    await delivery.save();
-    res.ststus(200).json({
-      status: 'success',
-      data: { delivery },
-    });
-  } catch (error) {
-    next();
+    const { ids } = req.body; // 前端传数组 [id1, id2, id3]
+    await deleteManyDelivery(ids);
+    res.sendSuccess(200, null, '批量删除成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+// 修改配送状态
+exports.updateStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const data = await updateDeliveryStatus(req.params.id, status);
+    res.sendSuccess(200, data, '配送状态修改成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };

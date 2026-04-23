@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllSuppliers, getSupplierById, createSupplier, updateSupplierById, deleteSupplierById, deleteManySupplier, changeStatus } = require('../controllers/supplierController');
-const { protect, onlySelf, requireAdmin } = require('../middlewares/auth');
+const { getAll, getOne, create, update, deleteSupplier, deleteMany, updateStatus } = require('../controllers/supplierController');
+const { protect, requireSalesperson, requireAdmin } = require('../middlewares/auth');
 
-router.get('/', protect, requireAdmin, getAllSuppliers);
-router.get('/:id', protect, requireAdmin, getSupplierById);
-router.post('/', protect, requireAdmin, createSupplier);
-router.put('/:id', protect, requireAdmin, updateSupplierById);
-router.delete('/:id', protect, requireAdmin, deleteSupplierById);
-router.delete('/deleteManySupplier', protect, requireAdmin, deleteManySupplier);
+router.get('/', protect, requireSalesperson, getAll);
+router.get('/:id', protect, requireSalesperson, getOne);
+router.post('/', protect, requireSalesperson, create);
+router.put('/:id', protect, requireSalesperson, update);
+router.delete('/:id', protect, requireAdmin, deleteSupplier);
+router.delete('/batch', protect, requireAdmin, deleteMany);
 
-router.post('/:id/active/inactive', protect, requireAdmin, changeStatus);
+router.put('/:id/status', protect, requireAdmin, updateStatus);
 
 module.exports = router;

@@ -1,156 +1,73 @@
-const requestTime = require('../middlewares/requestTime');
-const Supplier = require('../models/Supplier');
+const { createSupplier, findAllSuppliers, findSupplierById, updateSupplierById, deleteSupplierById, deleteManySupplier, updateSupplierStatus } = require('../services/supplierService');
 
-exports.getAllSuppliers = async (req, res, next) => {
+// 1. 创建供应商
+exports.create = async (req, res) => {
   try {
-    const { page = 1, limit = 10, keyword = '', status = '' } = req.query;
-    const query = {};
-
-    if (keyword) query.name = { $regex: keyword, $options: 'i' };
-    if (status) query.status = status;
-
-    const data = await Model.find(query)
-      .skip((page - 1) * limit)
-      .limit(+limit)
-      .sort({ createdAt: -1 });
-
-    const total = await Supplier.countDocuments(query);
-
-    res.json({
-      status: 'success',
-      total,
-      page,
-      limit,
-      data: { data },
-      request: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.getSupplierById = async (req, res, next) => {
-  try {
-    const supplier = await Supplier.findById(req.params.id);
-    if (!supplier) {
-      return res.status(404).json({
-        ststus: 'fail',
-        message: '供应商不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { supplier },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.createSupplier = async (req, res, next) => {
-  try {
-    const newSupplier = await Supplier.create(req.body);
-    res.status(201).json({
-      data: { newSupplier },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.updateSupplierById = async (req, res, next) => {
-  try {
-    const supplier = await Supplier.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!supplier) {
-      return res.status(404).json({
-        statsus: 'fail',
-        message: '供应商不存在',
-      });
-    }
-    res.statsus(200).json({
-      status: 'success',
-      data: { supplier },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.deleteSupplierById = async (req, res, next) => {
-  try {
-    const supplier = await Supplier.findByIdAndDelete(req.params.id);
-    if (!supplier) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '供应商不存在',
-      });
-    }
-    res.satatus(200).json({
-      status: 'success',
-      data: null,
-      message: '供应商已删除',
-    });
-  } catch (error) {
-    next(error);
+    const data = await createSupplier(req.body);
+    res.sendSuccess(201, data, '创建供应商成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.deleteManySupplier = async (req, res, next) => {
+// 2. 获取所有供应商
+exports.getAll = async (req, res) => {
+  try {
+    const items = await findAllSuppliers();
+    res.sendSuccess(200, { items }, '获取供应商列表成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+
+// 3. 获取单个供应商详情
+exports.getOne = async (req, res) => {
+  try {
+    const data = await findSupplierById(req.params.id);
+    res.sendSuccess(200, data, '获取供应商详情成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+
+// 4. 更新供应商
+exports.update = async (req, res) => {
+  try {
+    const data = await updateSupplierById(req.params.id, req.body);
+    res.sendSuccess(200, data, '更新供应商成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+
+// 5. 删除供应商
+exports.deleteSupplier = async (req, res) => {
+  try {
+    await deleteSupplierById(req.params.id);
+    res.sendSuccess(200, null, '删除供应商成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+
+// 6.批量删除供应商
+exports.deleteMany = async (req, res) => {
   try {
     const { ids } = req.body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '请选择删除的供应商',
-      });
-    }
-    await Supplier.deleteMany({ _id: { $in: ids } });
-    res.satatus(200).json({
-      status: 'success',
-      data: null,
-      message: '供应商批量删除成功',
-    });
-  } catch (error) {
-    next(error);
+    await deleteManySupplier(ids);
+    res.sendSuccess(200, null, '批量删除成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
-
-//供应商的状态接口解偶
-exports.changeStatus = async (req, res, next) => {
+// 修改供应商状态
+exports.updateStatus = async (req, res) => {
   try {
-    const { targetStatus } = req.body;
-    const supplier = await Supplier.findById(req.params.id);
-    if (!supplier) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '供应商不存在',
-      });
-    }
+    const { status } = req.body;
+    const supplier = await updateSupplierStatus(req.params.id, status);
 
-    const allowStatus = ['active', 'inactive'];
-
-    if (!allowStatus.includes(targetStatus)) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '仅支持 active/inactive',
-      });
-    }
-
-    if (supplier.status === targetStatus) {
-      return res.status(400).json({
-        status: 'fail',
-        message: `供应商状态已是 ${targetStatus}`,
-      });
-    }
-
-    supplier.status = targetStatus;
-    await supplier.save();
-    res.status(200).json({
-      status: 'success',
-      message: '状态修改成功',
-      data: { supplier },
-    });
-  } catch (error) {
-    next(error);
+    res.sendSuccess(200, supplier, '供应商状态修改成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };

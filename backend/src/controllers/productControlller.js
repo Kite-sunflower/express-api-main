@@ -1,170 +1,70 @@
-const { request } = require('../app');
-const requestTime = require('../middlewares/requestTime');
-const Product = require('../models/Product');
-
-exports.getAllProducts = async (req, res, next) => {
+const { createProduct, findAllProducts, findProductById, updateProductById, deleteProductById, deleteManyProduct, updateProductStatus } = require('../services/productService');
+// 1. 创建商品
+exports.create = async (req, res) => {
   try {
-    const { page = 1, limit = 10, keyword = '', status = '' } = req.query;
-    const query = {};
-
-    if (keyword) query.name = { $regex: keyword, $options: 'i' };
-    if (status) query.status = status;
-
-    const data = await Model.find(query)
-      .skip((page - 1) * limit)
-      .limit(+limit)
-      .sort({ createdAt: -1 });
-
-    const total = await Product.countDocuments(query);
-
-    res.json({
-      status: 'success',
-      total,
-      page,
-      limit,
-      data: { data },
-      request: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.getProductById = async (req, res, next) => {
-  try {
-    const product = await Product.findById(req.params.id).populate('supplierId');
-    if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '产品不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { product },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.createProduct = async (req, res, next) => {
-  try {
-    const newProduct = await Product.create(req.body);
-    res.status(201).json({
-      data: { newProduct },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.updateProductById = async (req, res, next) => {
-  try {
-    const { name, price, stock, description, supplierId } = req.body;
-    const updateData = {
-      name,
-      price,
-      stock,
-      description,
-      supplierId,
-    };
-
-    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-    if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '产品不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { product },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const data = await createProduct(req.body);
+    res.sendSuccess(201, data, '创建商品成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.deleteProductById = async (req, res) => {
+// 2. 获取所有商品
+exports.getAll = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '产品不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: null,
-      message: 'delete successful',
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const items = await findAllProducts();
+    res.sendSuccess(200, { items }, '获取商品列表成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
-exports.deleteManyProduct = async (req, res, next) => {
+
+// 3. 获取单个商品详情
+exports.getOne = async (req, res) => {
+  try {
+    const data = await findProductById(req.params.id);
+    res.sendSuccess(200, data, '获取商品详情成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+
+// 4. 更新商品
+exports.update = async (req, res) => {
+  try {
+    const data = await updateProductById(req.params.id, req.body);
+    res.sendSuccess(200, data, '更新商品成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+
+// 5. 删除商品
+exports.deleteProduct = async (req, res) => {
+  try {
+    await deleteProductById(req.params.id);
+    res.sendSuccess(200, null, '删除商品成功');
+  } catch (err) {
+    res.sendError(400, err.message);
+  }
+};
+// 6.批量删除商品
+exports.deleteMany = async (req, res) => {
   try {
     const { ids } = req.body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '请选择删除的产品',
-      });
-    }
-    await Product.deleteMany({ _id: { $in: ids } });
-    res.satatus(200).json({
-      status: 'success',
-      data: null,
-      message: '产品批量删除成功',
-    });
-  } catch (error) {
-    next(error);
+    await deleteManyProduct(ids);
+    res.sendSuccess(200, null, '批量删除成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
-
-//产品状态的接口解偶
-exports.changeStatus = async (req, res, next) => {
+// 修改商品状态
+exports.updateStatus = async (req, res) => {
   try {
-    const { targetStatus } = req.body;
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '产品不存在',
-      });
-    }
-
-    const allowStatus = ['on', 'off'];
-
-    if (!allowStatus.includes(targetStatus)) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '仅支持 on/off',
-      });
-    }
-
-    if (product.status === targetStatus) {
-      return res.status(400).json({
-        status: 'fail',
-        message: `产品状态已是 ${targetStatus}`,
-      });
-    }
-
-    product.status = targetStatus;
-    await product.save();
-    res.status(200).json({
-      status: 'success',
-      message: '状态修改成功',
-      data: { product },
-    });
-  } catch (error) {
-    next(error);
+    const { status } = req.body;
+    const data = await updateProductStatus(req.params.id, status);
+    res.sendSuccess(200, data, '商品状态修改成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };

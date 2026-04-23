@@ -1,19 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllorders, getOrderById, createOrder, updateOrderById, payOrder, shipOrder, completeOrder, cancelOrder, deleteOrderById, deleteManyOrder } = require('../controllers/orderController');
-const { protect, onlySelf, requireAdmin } = require('../middlewares/auth');
+const { getAll, getOne, create, update, deleteOrder, deleteMany, updateStatus } = require('../controllers/orderController');
+const { protect, onlySelf, requireSalesperson, requireAdmin } = require('../middlewares/auth');
 
-router.get('/', protect, requireAdmin, getAllorders);
-router.get('/:id', protect, onlySelf, getOrderById);
-router.post('/', protect, createOrder);
-router.put('/:id', protect, requireAdmin, updateOrderById);
-router.delete('/:id', protect, requireAdmin, deleteOrderById);
-router.delete('/deleteManyOrder', protect, requireAdmin, deleteManyOrder);
+router.get('/', protect, requireSalesperson, getAll);
+router.get('/:id', protect, onlySelf, getOne);
+router.post('/', protect, requireSalesperson, create);
+router.put('/:id', protect, requireSalesperson, update);
+router.delete('/:id', protect, requireAdmin, deleteOrder);
+router.delete('/batch', protect, requireAdmin, deleteMany);
 
-router.post('/:id/pay', protect, requireAdmin, payOrder);
-router.post('/:id/ship', protect, requireAdmin, shipOrder);
-router.post('/:id/complete', protect, requireAdmin, completeOrder);
-router.post('/:id/cancel', protect, onlySelf, cancelOrder);
+router.put('/:id/status', protect, requireSalesperson, updateStatus);
 
 module.exports = router;

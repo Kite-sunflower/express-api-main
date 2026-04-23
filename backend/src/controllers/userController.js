@@ -1,216 +1,93 @@
-const requestTime = require('../middlewares/requestTime');
-const User = require('../models/User');
+const { createUser, findAllUsers, findUserById, updateUserById, deleteUserById, deleteManyUser, updateUserStatus, updateUserRole } = require('../services/userService');
 
-exports.getAllUsers = async (req, res, next) => {
+// 1. 创建用户（管理员）
+exports.create = async (req, res) => {
   try {
-    const { page = 1, limit = 10, keyword = '', status = '' } = req.query;
-    const query = {};
-
-    if (keyword) query.name = { $regex: keyword, $options: 'i' };
-    if (status) query.status = status;
-
-    const data = await Model.find(query)
-      .skip((page - 1) * limit)
-      .limit(+limit)
-      .sort({ createdAt: -1 });
-
-    const total = await User.countDocuments(query);
-
-    res.json({
-      status: 'success',
-      total,
-      page,
-      limit,
-      data: { data },
-      request: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const data = await createUser(req.body);
+    res.sendSuccess(201, data, '创建用户成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.getUserById = async (req, res, next) => {
+// 2. 获取所有用户
+exports.getAll = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { user },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const items = await findAllUsers();
+    res.sendSuccess(200, { items }, '获取用户列表成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.createUser = async (req, res, next) => {
+// 3. 获取单个用户详情
+exports.getOne = async (req, res) => {
   try {
-    const existUser = await User.findOne({
-      username: req.body.username,
-    });
-
-    if (existUser) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '用户名已存在',
-      });
-    }
-    const newUser = await User.create(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: { newUser },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const data = await findUserById(req.params.id);
+    res.sendSuccess(200, data, '获取用户详情成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.updateUserById = async (req, res, next) => {
+// 4. 更新用户
+exports.update = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: { user },
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    const data = await updateUserById(req.params.id, req.body);
+    res.sendSuccess(200, data, '更新用户成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.deleteUserById = async (req, res, next) => {
+// 5. 删除用户
+exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
-    res.status(200).json({
-      status: 'success',
-      data: null,
-      message: '用户已删除',
-      requestTime: req.requestTime,
-    });
-  } catch (error) {
-    next(error);
+    await deleteUserById(req.params.id);
+    res.sendSuccess(200, null, '删除用户成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-exports.deleteManyUser = async (req, res, next) => {
+// 6.批量删除用户
+exports.deleteMany = async (req, res) => {
   try {
     const { ids } = req.body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '请选择删除的用户',
-      });
-    }
-    const data = await User.deleteMany({ _id: { $in: ids } });
-    res.satatus(200).json({
-      status: 'success',
-      data: null,
-      message: '用户批量删除成功',
-    });
-  } catch (error) {
-    next(error);
+    await deleteManyUser(ids);
+    res.sendSuccess(200, null, '批量删除成功');
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//用户状态设置
-exports.statusSetup = async (req, res, next) => {
+// 用户状态设置
+exports.updateStatus = async (req, res) => {
   try {
     const { targetStatus } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
+    const userId = req.params.id;
 
-    const allowStatus = ['active', 'inactive'];
+    // 调用公共函数
+    const user = await updateUserStatus(userId, targetStatus);
 
-    if (!allowStatus.includes(targetRole)) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '仅支持 active/inactive',
-      });
-    }
-
-    if (user.status === targetStatus) {
-      return res.status(400).json({
-        status: 'fail',
-        message: `用户状态已是 ${targetStatus}`,
-      });
-    }
-
-    user.status = targetStatus;
-    await user.save();
-    res.status(200).json({
-      status: 'success',
-      message: '状态修改成功',
-      data: { user },
-    });
-  } catch (error) {
-    next(error);
+    res.sendSuccess(200, user, `状态修改成功：${targetStatus}`);
+  } catch (err) {
+    res.sendError(400, err.message);
   }
 };
 
-//用户角色设置
-exports.roleSetup = async (req, res, next) => {
+// 用户角色设置
+exports.updateRole = async (req, res) => {
   try {
     const { targetRole } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: '用户不存在',
-      });
-    }
+    const userId = req.params.id;
 
-    const allowRole = ['user', 'salesperson'];
+    // 调用 service 公共函数
+    const user = await updateUserRole(userId, targetRole);
 
-    if (!allowRole.includes(targetRole)) {
-      return res.status(400).json({
-        status: 'fail',
-        message: '仅支持 user/salesperson',
-      });
-    }
-
-    if (user.role === targetRole) {
-      return res.status(400).json({
-        status: 'fail',
-        message: `用户角色已是 ${targetRole}`,
-      });
-    }
-
-    user.role = targetRole;
-    await user.save();
-    res.status(200).json({
-      status: 'success',
-      message: '角色修改成功',
-      data: { user },
-    });
-  } catch (error) {
-    next(error);
+    res.sendSuccess(200, user, `角色修改成功：${targetRole}`);
+  } catch (err) {
+    // 错误统一捕获
+    res.sendError(400, err.message);
   }
 };
