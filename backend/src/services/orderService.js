@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 //生成订单号
 function generateOrderNo() {
@@ -8,14 +9,40 @@ function generateOrderNo() {
 }
 
 // 1. 创建订单
-exports.createOrder = async (orderData) => {
-  const { userId, createdBy, items, totalPrice } = orderData;
+exports.createOrder = async (orderData, user) => {
+  const { userId, items, address, payType, remark } = orderData;
 
   // 校验必填
   if (!userId) throw new Error('用户ID不能为空');
-  if (!createdBy) throw new Error('创建人ID不能为空');
   if (!items || items.length === 0) throw new Error('订单商品不能为空');
-  if (totalPrice === undefined || totalPrice < 0) throw new Error('订单金额无效');
+  if (!address || !address.name || !address.phone || !address.address) {
+    throw new Error('请填写完整收货地址');
+  }
+  //自动计算价格
+  let totalPrice = 0;
+  const processedItems = [];
+
+  // 遍历商品，查库拿真实价格
+  for (const item of items) {
+    const product = await Product.findById(item.productId);
+    if (!product) throw new Error(`商品${item.productId}不存在`);
+    if (item.quantity < 1) throw new Error('购买数量不能小于1');
+
+    // 单品价格累加
+    totalPrice += product.price * item.quantity;
+
+    processedItems.push({
+      productId: product._id,
+      productName: product.productName, // 商品名称（自动查）
+      price: product.price, // 商品价格（自动查）
+      quantity: item.quantity, // 购买数量
+    });
+  }
+
+  // 自动赋值创建人 + 下单类型
+  const createdBy = user._id;
+  let createType = 'user';
+  if (user.role === 'salesperson') createType = 'salesperson';
 
   //生成订单号
   const orderNo = generateOrderNo();
@@ -24,20 +51,53 @@ exports.createOrder = async (orderData) => {
   const exists = await Order.findOne({ orderNo });
   if (exists) throw new Error('订单号已存在');
 
-  return await Order.create({ ...orderData, orderNo });
+  return await Order.create({
+    orderNo,
+    userId,
+    createdBy: user._id,
+    createType,
+    items: processedItems,
+    totalPrice,
+    address,
+    payType,
+    remark,
+  });
 };
 
 // 2. 查询所有订单（带关联）
 exports.findAllOrders = async () => {
-  return await Order.find().populate('userId', 'username email').sort({ createdAt: -1 });
+  const orders = await Order.find().populate('userId', 'username email').populate('createdBy', 'username').populate('items.productId', 'parductName price').sort({ createdAt: -1 }).lean();
+  return orders.map((order) => ({
+    id: order._id,
+    orderNo: order.orderNo,
+    userId: order.userId,
+    createdBy: order.createdBy,
+    createType: order.createType,
+    items: order.items,
+    totalPrice: order.totalPrice,
+    address: order.address,
+    payType: order.payType,
+    remark: order.remark,
+  }));
 };
 
 // 3. 根据ID查询单个订单
 exports.findOrderById = async (id) => {
-  const order = await Order.findById(id).populate('userId', 'username email').populate('createdBy', 'username').populate('items.productId', 'productName price');
+  const order = await Order.findById(id).populate('userId', 'username email').populate('createdBy', 'username').populate('items.productId', 'productName ').lean();
 
   if (!order) throw new Error('订单不存在');
-  return order;
+  return {
+    _id: order._id,
+    orderNo: order.orderNo,
+    userId: order.userId,
+    createdBy: order.createdBy,
+    createType: order.createType,
+    items: order.items,
+    totalPrice: order.totalPrice,
+    address: order.address,
+    payType: order.payType,
+    remark: order.remark,
+  };
 };
 
 // 4. 更新订单（状态、地址、支付方式、备注等）

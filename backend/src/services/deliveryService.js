@@ -1,4 +1,5 @@
 const Delivery = require('../models/Delivery');
+const Order = require('../models/Order');
 
 function generateDeliveryNo() {
   const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
@@ -8,19 +9,30 @@ function generateDeliveryNo() {
 
 // 1. 创建配送单
 exports.createDelivery = async (deliveryData) => {
-  const { deliveryNo, orderId, address } = deliveryData;
+  const { orderId } = deliveryData;
 
   // 校验必填
   if (!orderId) throw new Error('订单ID不能为空');
 
+  // 根据 orderId 查询订单，直接拿地址！
+  const order = await Order.findById(orderId);
+  if (!order) throw new Error('订单不存在');
+
+  // 3. 从订单里取出地址（前端不用传了）
+  const address = order.address;
+
   //生成配送订单号
-  const ddeliveryNo = generateDeliveryNo();
+  const deliveryNo = generateDeliveryNo();
 
   // 检查单号重复
   const exists = await Delivery.findOne({ deliveryNo });
   if (exists) throw new Error('配送单号已存在');
 
-  return await Delivery.create({ ...deliveryData, deliveryNo });
+  return await Delivery.create({
+    deliveryNo,
+    orderId: order._id,
+    address: order.address,
+  });
 };
 
 // 2. 查询所有配送单

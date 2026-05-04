@@ -1,5 +1,3 @@
-const requestTime = require('./requestTime');
-
 module.exports = (req, res, next) => {
   res.sendError = (statusCode, message) => {
     return res.status(statusCode).json({

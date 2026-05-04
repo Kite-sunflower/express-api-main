@@ -6,11 +6,11 @@ const userSchema = new mongoose.Schema(
     //普通用户
     username: {
       type: String,
-      required: true,
+      required: false,
     },
     email: {
       type: String,
-      required: true,
+      required: false,
       lowercase: true,
     },
     password: {
@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     resetcode: String,
-    restCodeExpire: Date,
+    resetCodeExpire: Date,
     address: {
       name: String,
       phone: String,
@@ -40,17 +40,31 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { email: { $exists: true, $ne: null } },
+  }
+);
+
+// 只对【有 username 的用户】创建唯一索引
+userSchema.index(
+  { username: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { username: { $exists: true, $ne: null } },
+  }
+);
+
 //保存前自动加密密码
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  } catch (error) {
-    throw error;
-  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // 校验密码方法

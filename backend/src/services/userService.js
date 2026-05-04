@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // 1. 创建用户（公共方法：注册 + 管理员创建都用这个）
 exports.createUser = async (userData) => {
@@ -61,6 +62,10 @@ exports.updateUserById = async (id, updateData) => {
   const user = await User.findById(id);
   if (!user) throw new Error('用户不存在');
 
+  if (updateData.password) {
+    // 加密密码
+    updateData.password = bcrypt.hashSync(updateData.password, 10);
+  }
   return await User.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
@@ -112,16 +117,18 @@ exports.updateUserRole = async (userId, targetRole) => {
 
   return user;
 };
+
 // ===================== 用户状态修改（公共函数）=====================
 exports.updateUserStatus = async (userId, targetStatus) => {
   // 1. 查用户
   const user = await User.findById(userId);
+
   if (!user) throw new Error('用户不存在');
 
   // 2. 校验状态是否合法
   const allowStatus = ['active', 'inactive'];
   if (!allowStatus.includes(targetStatus)) {
-    throw new Error('状态仅支持：active / inactive');
+    throw new Error('状态仅支持:active / inactive');
   }
 
   // 3. 如果状态一样，不用改
@@ -134,4 +141,19 @@ exports.updateUserStatus = async (userId, targetStatus) => {
   await user.save();
 
   return user;
+};
+
+// =====================  修改密码 =====================
+exports.updatePwd = async (userId, oldPwd, newPwd) => {
+  const user = await User.findById(userId).select('+password');
+  if (!user) throw new Error('用户不存在');
+
+  const isMatch = await bcrypt.compare(oldPwd, user.password);
+  if (!isMatch) throw new Error('旧密码错误');
+
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(newPwd, salt);
+  await user.save();
+
+  return true;
 };

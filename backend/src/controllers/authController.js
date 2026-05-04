@@ -1,5 +1,6 @@
-const { findUserByAccount, verifyPassword, generateToken, updatePassword, sendResetCode, resetPassword } = require('../services/authService');
+const { findUserByAccount, verifyPassword, generateToken, updatePassword, generateResetCode, resetUserPwd } = require('../services/authService');
 
+const { createUser } = require('../services/userService');
 // 注册接口
 exports.register = async (req, res) => {
   try {
@@ -27,7 +28,7 @@ exports.login = async (req, res) => {
     if (!password) return res.sendError(400, '请输入密码');
 
     const user = await findUserByAccount(account);
-    await verifyPassword(password, user.password);
+    verifyPassword(password, user.password);
 
     const token = generateToken(user);
 
@@ -73,9 +74,15 @@ exports.getInfo = async (req, res) => {
 // 修改密码
 exports.updatePwd = async (req, res) => {
   try {
-    const { oldPwd, newPwd } = req.body;
-    await updatePassword(req.user._id, oldPwd, newPwd);
-    res.sendSuccess(200, null, '密码修改成功，请重新登录');
+    const { id } = req.params;
+    const { newPwd } = req.body;
+
+    if (!newPwd) {
+      return res.sendError(400, '请输入新密码');
+    }
+
+    await updatePassword(id, newPwd);
+    res.sendSuccess(200, null, '管理员重置密码成功');
   } catch (err) {
     res.sendError(400, err.message);
   }
@@ -85,8 +92,8 @@ exports.updatePwd = async (req, res) => {
 exports.sendResetCode = async (req, res) => {
   try {
     const { username } = req.body;
-    await sendResetCode(username);
-    res.sendSuccess(200, null, '验证码已发送');
+    const verificationCode = await generateResetCode(username);
+    res.sendSuccess(200, { verificationCode }, '验证码已发送');
   } catch (err) {
     res.sendError(400, err.message);
   }
@@ -96,7 +103,7 @@ exports.sendResetCode = async (req, res) => {
 exports.resetPwd = async (req, res) => {
   try {
     const { username, code, newPwd } = req.body;
-    await resetPassword(username, code, newPwd);
+    await resetUserPwd(username, code, newPwd);
     res.sendSuccess(200, null, '密码重置成功，请前往登录');
   } catch (err) {
     res.sendError(400, err.message);

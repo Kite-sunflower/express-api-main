@@ -62,7 +62,7 @@
 
 ```json
 {
-  "username": "user01",
+  "username": "user007",
   "password": "123456"
 }
 ```
@@ -72,11 +72,12 @@
 ```json
 {
   "status": "success",
-  "message": "注册成功",
   "data": {
-    "userId": "777888",
-    "username": "user01"
-  }
+    "id": "69eb03c82e7115cd79e2764e",
+    "username": "user007"
+  },
+  "message": "注册成功",
+  "requestTime": "2026-04-24T05:46:48.669Z"
 }
 ```
 
@@ -88,14 +89,14 @@
 请求参数
 | 参数名 | 类型 |必传 | 说明 |
 | ------- | ----- | ------ | --- |
-| username | Strinng | 是 | 用户名 |
+| account | Strinng | 是 | 账户 |
 | password | String | 是 | 密码 |
 
 请求示例
 
 ```json
 {
-  "username": "user01",
+  "account": "user007",
   "password": "123456"
 }
 ```
@@ -105,18 +106,19 @@
 ```json
 {
   "status": "success",
-  "message": "登录成功",
   "data": {
-    "token": "xxxx.xxxx.xxxx",
-    "userId": "666111",
-    "role": "user"
-  }
+    "id": "69eb03c82e7115cd79e2764e",
+    "username": "user007",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZWIwM2M4MmU3MTE1Y2Q3OWUyNzY0ZSIsInVzZXJuYW1lIjoidXNlcjAwNyIsImlhdCI6MTc3NzAxMTIwNCwiZXhwIjoxNzc3NjE2MDA0fQ.kalFB0DH_bVs3Yt41J1gDwzg3hSxUF1fF0BV8KfSx1I"
+  },
+  "message": "登录成功",
+  "requestTime": "2026-04-24T06:13:24.157Z"
 }
 ```
 
 1.3 退出登录  
 .请求方式:post  
-.请求地址:/api/user/loginout  
+.请求地址:/api/user/logout  
 .接口描述：注销当前登录用户令牌，清空登录状态  
 .鉴权:需要token
 
@@ -136,21 +138,22 @@
 ```json
 {
   "status": "success",
+  "data": null,
   "message": "退出登录成功",
-  "data": null
+  "requestTime": "2026-04-24T07:34:15.977Z"
 }
 ```
 
 1.4 获取个人信息.  
 .请求方式:get.
-.请求地址:/api/user/getInfo.  
+.请求地址:/api/auth/Info.  
 .接口描述:  
 .鉴权:需要token.
 
 请求参数
 |参数名|类型|必传|说明|
 |----|---|---|---|
-|null|
+||
 
 请求示例
 
@@ -163,33 +166,32 @@
 ```json
 {
   "status": "success",
-  "message": "获取信息成功",
   "data": {
-    "id": "22223333",
-    "username": "user01",
-    "email": "123@qq.com",
-    "role": "user"
-  }
+    "_id": "69eb104d1c1c208d6cc11c94",
+    "username": "user001",
+    "role": "user",
+    "createdAt": "2026-04-24T06:40:13.481Z"
+  },
+  "message": "获取信息成功",
+  "requestTime": "2026-04-24T07:14:33.111Z"
 }
 ```
 
-1.5 修改密码.  
+1.5 管理员修改密码.  
 .请求方式:post.  
-.请求地址:/api/user/updatePwd.
+.请求地址:/api/auth/updatePwd.
 .接口描述：  
 .鉴权:需要token.
 
 请求参数
 |参数名|类型|必传|说明|
 |-----|----|----|---|
-|oldPwd|String|是|旧密码|
 |newPwd|String|是|新密码|
 
 请求示例.
 
 ```json
 {
-  "oldPwd": "123456",
   "newPwd": "111111"
 }
 ```
@@ -199,14 +201,45 @@
 ```json
 {
   "status": "success",
-  "message": "密码修改成功，请从新登录"
+  "data": true,
+  "message": "密码修改成功",
+  "requestTime": "2026-05-01T06:42:10.346Z"
 }
 ```
 
-1.6 忘记密码，发送验证码.  
+1.14用户修改密码.  
+.请求方式:put.
+.请求地址:/api/user/id/updatePassword
+.接口描述：  
+.鉴权:需要token.
+
+请求参数
+|参数名|类型|必传|说明|
+|---|---|---|--|
+|oldPwd|String|是｜旧密码|
+|newPwd|String|是｜新密码|
+请求示例
+
+```json
+{
+  "newPWD": "0000"
+}
+```
+
+响应示例
+
+````json
+{
+  "status": "success",
+  "data": true,
+  "message": "密码修改成功",
+  "requestTime": "2026-05-01T06:42:10.346Z"
+}
+
+1.6 忘记密码，发送验证码.
 .请求方式:post.
-.请求地址:/api/user/sendResetCode.  
-.接口描述:  
+.请求地址:/api/user/sendResetCode.
+.接口描述:
 .鉴权:需要token.
 
 请求参数
@@ -218,16 +251,18 @@
 
 ```json
 {
-  "username": "user01"
+  "username": "admin"
 }
-```
+````
 
 响应示例
 
 ```json
 {
   "status": "success",
-  "message": "验证码已发送"
+  "data": null,
+  "message": "验证码已发送",
+  "requestTime": "2026-04-27T17:50:19.610Z"
 }
 ```
 
@@ -265,7 +300,7 @@
 
 1.7 获取所有用户.  
 .请求方式:get.
-.请求地址:/api/user/getAllUsers.  
+.请求地址:/api/user/  
 .接口描述：  
 .鉴权:需要token.
 
@@ -284,12 +319,53 @@
 
 ```json
 {
-"status": "success",
-"total",
-"page",
-"limit",
-"data": "{ data }",
-"request": "req.requestTime",
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "_id": "69eb104d1c1c208d6cc11c94",
+        "username": "user001",
+        "role": "user",
+        "status": "active",
+        "createdAt": "2026-04-24T06:40:13.481Z",
+        "updatedAt": "2026-04-24T06:40:13.481Z",
+        "__v": 0
+      },
+      {
+        "_id": "69eb03c82e7115cd79e2764e",
+        "username": "user007",
+        "role": "user",
+        "status": "active",
+        "createdAt": "2026-04-24T05:46:48.687Z",
+        "updatedAt": "2026-04-24T05:46:48.687Z",
+        "__v": 0
+      },
+      {
+        "_id": "69e9c7dbe068833ad103edd4",
+        "username": "user008",
+        "email": "123@qq.com",
+        "role": "user",
+        "status": "active",
+        "createdAt": "2026-04-23T07:18:51.366Z",
+        "updatedAt": "2026-04-23T07:18:51.366Z",
+        "__v": 0
+      },
+      {
+        "_id": "69eb2472ba5f8b88a6b1e0db",
+        "username": "admin",
+        "role": "admin",
+        "status": "active"
+      },
+      {
+        "_id": "69eb24d6ba5f8b88a6b1e0dd",
+        "username": "saleperson",
+        "role": "saleperson",
+        "status": "active"
+      }
+    ]
+  },
+  "message": "获取用户列表成功",
+  "requestTime": "2026-04-24T08:33:37.237Z"
 }
 ```
 
@@ -302,13 +378,13 @@
 请求参数  
 |参数名|类型|必传|说明|
 |----|---|--|--|
-|username|String|是|用户名|
+|userId|String|是|用户id|
 
 请求示例
 
 ```json
 {
-  "ursename": "user01"
+  "urseId": "69eb104d1c1c208d6cc11c94"
 }
 ```
 
@@ -316,9 +392,18 @@
 
 ```json
 {
-  " status": "success",
-  "data": "user",
-  "requestTime": "eq.requestTime"
+  "status": "success",
+  "data": {
+    "_id": "69eb104d1c1c208d6cc11c94",
+    "username": "user001",
+    "role": "user",
+    "status": "active",
+    "createdAt": "2026-04-24T06:40:13.481Z",
+    "updatedAt": "2026-04-24T06:40:13.481Z",
+    "__v": 0
+  },
+  "message": "获取用户详情成功",
+  "requestTime": "2026-04-24T08:35:44.623Z"
 }
 ```
 
@@ -338,8 +423,8 @@
 
 ```json
 {
-  "username": "user01",
-  "password": "333444"
+  "username": "user0009",
+  "password": "009"
 }
 ```
 
@@ -347,32 +432,38 @@
 
 ```json
 {
-"status":"success",
-"message":"创建用户成功",
-"data":"{ newUser:{
-    "username":"user01",
-    "password":"333444"
-} }",
-"requestTime": "req.requestTime",
+  "status": "success",
+  "data": {
+    "username": "user009",
+    "password": "$2b$10$nsZXLOVKRUyyHGpPnsktZuEzsfiak3iSr34PrtUBSi8ifWGc/P8Cy",
+    "role": "user",
+    "status": "active",
+    "_id": "69eba41570cdd7c6e73e3cd2",
+    "createdAt": "2026-04-24T17:10:45.965Z",
+    "updatedAt": "2026-04-24T17:10:45.965Z",
+    "__v": 0
+  },
+  "message": "创建用户成功",
+  "requestTime": "2026-04-24T17:10:45.957Z"
 }
 ```
 
 1.10 更新用户资料.  
 .请求方式:put.
-.请求地址:/api/user/updateUserById.  
+.请求地址:/api/user/id
 .接口描述：  
 .鉴权:需要token.
 
 请求参数
 |参数名|类型|必传|说明|
 |---|---|---|--|
-|usename|String|是|用户名|
+|updata|json|是|更新数据|
 
 请求示例
 
 ```json
 {
-  "username": "user01"
+  "username": "user03"
 }
 ```
 
@@ -380,29 +471,37 @@
 
 ```json
 {
-"status":"success"
-"message":"更新成功",
-"data": { user },
-"requestTime": "req.requestTime",
+  "status": "success",
+  "data": {
+    "_id": "69eb104d1c1c208d6cc11c94",
+    "username": "user003",
+    "role": "user",
+    "status": "active",
+    "createdAt": "2026-04-24T06:40:13.481Z",
+    "updatedAt": "2026-04-24T16:38:42.436Z",
+    "__v": 0
+  },
+  "message": "更新用户成功",
+  "requestTime": "2026-04-24T16:38:42.434Z"
 }
 ```
 
 1.11 删除单个用户.  
 .请求方式:delete.  
-.请求地址:/api/user/deleteUserById.  
+.请求地址:/api/user/id/delete
 .接口描述：  
 .鉴权:需要token.
 
 请求参数
 |参数名|类型|必传|说明|
 |---|---|---|---|
-|usename|String|是|用户名|
+|userid|String|是|用户id|
 
 请求示例
 
 ```json
 {
-  "username": "user01"
+  "userid": "69e9c7dbe068833ad103edd4"
 }
 ```
 
@@ -412,14 +511,14 @@
 {
   "status": "success",
   "data": null,
-  "message": "用户已删除",
-  "requestTime": "req.requestTime"
+  "message": "删除用户成功",
+  "requestTime": "2026-04-24T17:04:53.864Z"
 }
 ```
 
 1.12 批量删除用户  
 .请求方式:delete.  
-.请求地址:/api/user/deleteManyUser.
+.请求地址:/api/user/batch/delete
 .接口描述：  
 .鉴权:需要token.
 
@@ -432,7 +531,7 @@
 
 ```json
 {
-  "ids": [{ "username": "user01" }, { "username": "user02" }, { "username": "user03" }]
+  "ids": ["69eb104d1c1c208d6cc11c94", "69eb03c82e7115cd79e2764e"]
 }
 ```
 
@@ -442,7 +541,8 @@
 {
   "status": "success",
   "data": null,
-  "message": "用户批量删除成功"
+  "message": "批量删除成功",
+  "requestTime": "2026-04-27T16:34:24.904Z"
 }
 ```
 
@@ -455,6 +555,7 @@
 请求参数  
 |参数名|类型|必传|说明|
 |----|---|---|---|
+|userid|String|是|用户id|
 |targetStatus|Sreing|是|目标状态|
 
 请求示例
@@ -469,9 +570,18 @@
 
 ```json
 {
-"status": "success",
-"message":" 状态修改成功"
-"data": { user },
+  "status": "success",
+  "data": {
+    "_id": "69eba41570cdd7c6e73e3cd2",
+    "username": "user009",
+    "role": "user",
+    "status": "inactive",
+    "createdAt": "2026-04-24T17:10:45.965Z",
+    "updatedAt": "2026-04-25T05:41:01.833Z",
+    "__v": 0
+  },
+  "message": "状态修改成功：inactive",
+  "requestTime": "2026-04-25T05:41:01.811Z"
 }
 ```
 
@@ -484,13 +594,14 @@
 请求参数  
 |参数名|类型|必传|说明|
 |----|---|---|---|
+|userId|----|----|----|
 |targetRole|String|是|目标角色|
 
 请求示例
 
 ```json
 {
-  "targetRole": "admin"
+  "targetRole": "salesperson"
 }
 ```
 
@@ -498,9 +609,48 @@
 
 ```json
 {
-"status": "success",
-"message":" 角色修改成功"
-"data": { user },
+  "status": "success",
+  "data": {
+    "_id": "69eba41570cdd7c6e73e3cd2",
+    "username": "user009",
+    "role": "salesperson",
+    "status": "inactive",
+    "createdAt": "2026-04-24T17:10:45.965Z",
+    "updatedAt": "2026-04-26T06:14:12.189Z",
+    "__v": 0
+  },
+  "message": "角色修改成功：salesperson",
+  "requestTime": "2026-04-26T06:14:12.183Z"
+}
+```
+
+1.14用户修改密码.  
+.请求方式:put.
+.请求地址:/api/user/id/updatePassword
+.接口描述：  
+.鉴权:需要token.
+
+请求参数
+|参数名|类型|必传|说明|
+|---|---|---|--|
+|oldPwd|String|是｜旧密码|
+|newPwd|String|是｜新密码|
+请求示例
+
+```json
+{
+  "newPWD": "0000"
+}
+```
+
+响应示例
+
+```json
+{
+  "status": "success",
+  "data": true,
+  "message": "密码修改成功",
+  "requestTime": "2026-05-01T06:42:10.346Z"
 }
 ```
 
@@ -527,13 +677,24 @@
 
 ```json
 {
-
-    "status": "success",
-      "total",
-      "page",
-      "limit",
-      "data": "{ data }",
-      "request": "req.requestTime"
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "_id": "69edb0132b428049d1094d91",
+        "name": "product01",
+        "price": 100,
+        "stock": 0,
+        "supplierId": "69edaf3d2b428049d1094d90",
+        "status": "on",
+        "createdAt": "2026-04-26T06:26:27.960Z",
+        "updatedAt": "2026-04-26T06:26:27.960Z",
+        "__v": 0
+      }
+    ]
+  },
+  "message": "获取商品列表成功",
+  "requestTime": "2026-04-26T06:28:20.651Z"
 }
 ```
 
@@ -552,7 +713,7 @@
 
 ```json
 {
-  "productId": "123456"
+  "productId": "69edb0132b428049d1094d91"
 }
 ```
 
@@ -561,8 +722,19 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69edb0132b428049d1094d91",
+    "name": "product01",
+    "price": 100,
+    "stock": 0,
+    "supplierId": null,
+    "status": "on",
+    "createdAt": "2026-04-26T06:26:27.960Z",
+    "updatedAt": "2026-04-26T06:26:27.960Z",
+    "__v": 0
+  },
+  "message": "获取商品详情成功",
+  "requestTime": "2026-04-27T16:20:49.009Z"
 }
 ```
 
@@ -579,19 +751,14 @@
 |price|Number|是|价格|
 |stock|Number|是|库存|
 |supplierId|Object|是|供应商id|
-|description|String|否|描述|
-|status|String|否|上下架状态|
 
 请求示例
 
 ```json
 {
-"productName":"rose"
-"price":"100",
-"stock":"100"
-"description":"玫瑰花"
-"supplierId":"supplier01",
-"status":"on"
+  "name": "product01",
+  "price": "100",
+  "supplierid": "69edaf3d2b428049d1094d90"
 }
 ```
 
@@ -599,9 +766,20 @@
 
 ```json
 {
-"message":"创建产品成功"
-"data": { newProduct },
-"requestTime": "req.requestTime"
+  "status": "success",
+  "data": {
+    "name": "product01",
+    "price": 100,
+    "stock": 0,
+    "supplierId": "69edaf3d2b428049d1094d90",
+    "status": "on",
+    "_id": "69edb0132b428049d1094d91",
+    "createdAt": "2026-04-26T06:26:27.960Z",
+    "updatedAt": "2026-04-26T06:26:27.960Z",
+    "__v": 0
+  },
+  "message": "创建商品成功",
+  "requestTime": "2026-04-26T06:26:27.956Z"
 }
 ```
 
@@ -614,22 +792,14 @@
 请求参数
 |参数名|类型|必传|说明|
 |-----|----|----|----|
-|name|String|是|商品名称|
-|price|Number|是|价格|
-|stock|Number|是|库存|
-|supplierId|Object|是|供应商id|
-|description|String|否|描述|
+|productId|String|是|商品id|
+|updateData|json|是|更新数据|
 
 请求示例
 
 ```json
 {
-"productName":"tulip"
-"price":"100",
-"stock":"100"
-"description":"郁金香"
-"supplierId":"supplier01",
-"status":"on"
+  "stock": 10
 }
 ```
 
@@ -637,9 +807,20 @@
 
 ```json
 {
-"message":"更新产品成功"
-"data": { newProduct },
-"requestTime": "req.requestTime"
+  "status": "success",
+  "data": {
+    "_id": "69edb0132b428049d1094d91",
+    "name": "product01",
+    "price": 100,
+    "stock": 10,
+    "supplierId": "69edaf3d2b428049d1094d90",
+    "status": "on",
+    "createdAt": "2026-04-26T06:26:27.960Z",
+    "updatedAt": "2026-04-27T16:24:19.175Z",
+    "__v": 0
+  },
+  "message": "更新商品成功",
+  "requestTime": "2026-04-27T16:24:19.158Z"
 }
 ```
 
@@ -657,7 +838,7 @@
 
 ```json
 {
-  "productId": "1233444"
+  "productId": "69edb0132b428049d1094d91/"
 }
 ```
 
@@ -667,14 +848,14 @@
 {
   "status": "success",
   "data": null,
-  "message": "删除成功",
-  "requestTime": "req.requestTime"
+  "message": "删除商品成功",
+  "requestTime": "2026-04-27T16:26:10.147Z"
 }
 ```
 
 2.6 批量删除产品.  
 .请求方式:delete.  
-.请求地址:/api/product/deleteManyProduct.  
+.请求地址:/api/product/batch/delete.  
 .接口描述：
 .鉴权:需要token
 
@@ -687,7 +868,7 @@
 
 ```json
 {
-  "ids": [{ "productId": "123455" }, { "productId": "123456" }, { "productId": "123457" }, { "productId": "123458" }]
+  "ids": ["69edc8b707ce576a454b93fe", "69edc8d407ce576a454b93ff"]
 }
 ```
 
@@ -698,7 +879,7 @@
   "status": "success",
   "data": null,
   "message": "批量删除成功",
-  "requestTime": "req.requestTime"
+  "requestTime": "2026-04-27T16:28:55.862Z"
 }
 ```
 
@@ -719,8 +900,7 @@
 
 ```json
 {
-"productId":"123455"，
-"on"
+  "status": "off"
 }
 ```
 
@@ -729,8 +909,19 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69edc8e207ce576a454b9401",
+    "name": "product04",
+    "price": 300,
+    "stock": 100,
+    "supplierId": "69edc667b6e997e4c321a2cb",
+    "status": "off",
+    "createdAt": "2026-04-26T08:12:18.326Z",
+    "updatedAt": "2026-04-27T16:31:03.646Z",
+    "__v": 0
+  },
+  "message": "更新商品成功",
+  "requestTime": "2026-04-27T16:31:03.643Z"
 }
 ```
 
@@ -738,7 +929,7 @@
 
 3.1 获取所有供应商.  
 .请求方式:get.  
-.请求地址:/api/supplier/getAllsupplier.  
+.请求地址:/api/supplier/  
 .接口描述：
 .鉴权:需要token
 
@@ -757,16 +948,47 @@
 
 ```json
 {
-    "status": "success",
-      "total",
-      "page",
-      "limit",
-      "data": "{ data }",
-      "request": "req.requestTime"
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "_id": "69edc681b6e997e4c321a2cd",
+        "name": "supplier003",
+        "phone": "2552",
+        "address": "moscow",
+        "status": "able",
+        "createdAt": "2026-04-26T08:02:09.340Z",
+        "updatedAt": "2026-04-27T16:15:12.063Z",
+        "__v": 0
+      },
+      {
+        "_id": "69edc674b6e997e4c321a2cc",
+        "name": "supplier002",
+        "phone": "2551",
+        "address": "vitebsk",
+        "status": "able",
+        "createdAt": "2026-04-26T08:01:56.022Z",
+        "updatedAt": "2026-04-26T08:01:56.022Z",
+        "__v": 0
+      },
+      {
+        "_id": "69edc667b6e997e4c321a2cb",
+        "name": "supplier001",
+        "phone": "2550",
+        "address": "minsk",
+        "status": "able",
+        "createdAt": "2026-04-26T08:01:43.247Z",
+        "updatedAt": "2026-04-26T08:01:43.247Z",
+        "__v": 0
+      }
+    ]
+  },
+  "message": "获取供应商列表成功",
+  "requestTime": "2026-04-27T16:18:23.760Z"
 }
 ```
 
-3.2 获取单个产品详情.  
+3.2 获取单个供应商详情.  
 .请求方式:get.  
 .请求地址:/api/supplier/getSupplier.  
 .接口描述：
@@ -781,7 +1003,7 @@
 
 ```json
 {
-  "supplierId": "123456"
+  "supplierId": "69edc681b6e997e4c321a2cd"
 }
 ```
 
@@ -790,8 +1012,18 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69edc681b6e997e4c321a2cd",
+    "name": "supplier003",
+    "phone": "2552",
+    "address": "moscow",
+    "status": "able",
+    "createdAt": "2026-04-26T08:02:09.340Z",
+    "updatedAt": "2026-04-27T16:15:12.063Z",
+    "__v": 0
+  },
+  "message": "获取供应商详情成功",
+  "requestTime": "2026-04-27T16:19:14.226Z"
 }
 ```
 
@@ -807,50 +1039,13 @@
 |name|String|是|商品名称|
 |phone|String|是|电话|
 |address|String|是|地址|
-|status|String|否|启用/禁用状态|
 
 请求示例
 
 ```json
 {
-  "name": "supplier1",
-  "phone": "+375255079778",
-  "address": "vitebsk"
-}
-```
-
-响应示例
-
-```json
-{
-"message":"创建供应商成功",
-"data": { newProduct },
-"requestTime": "req.requestTime"
-}
-```
-
-3.4 更新供应商  
-.请求方式:put.  
-.请求地址:/api/supplier/updateSupplier.  
-.接口描述：  
-.鉴权:需要token
-
-请求参数
-|参数名|类型|必传|说明|
-|----|----|---|---|
-|supplierId|String|是|供应商id|
-|name|String|是|商品名称|
-|phone|String|是|电话|
-|address|String|是|地址|
-|status|String|否|启用/禁用状态|
-
-请求示例
-
-```json
-{
-  "supplierId": "111122333",
-  "name": "supplier1",
-  "phone": "+375255079778",
+  "name": "supplier001",
+  "phone": "255079778",
   "address": "minsk"
 }
 ```
@@ -859,9 +1054,59 @@
 
 ```json
 {
-"message":"更新供应商成功"
-"data": { newProduct },
-"requestTime": "req.requestTime"
+  "status": "success",
+  "data": {
+    "name": "supplier001",
+    "phone": "255079778",
+    "address": "minsk",
+    "status": "able",
+    "_id": "69edaf3d2b428049d1094d90",
+    "createdAt": "2026-04-26T06:22:53.947Z",
+    "updatedAt": "2026-04-26T06:22:53.947Z",
+    "__v": 0
+  },
+  "message": "创建供应商成功",
+  "requestTime": "2026-04-26T06:22:53.932Z"
+}
+```
+
+3.4 更新供应商  
+.请求方式:put.  
+.请求地址:/api/supplier/id/update
+.接口描述：  
+.鉴权:需要token
+
+请求参数
+|参数名|类型|必传|说明|
+|----|----|---|---|
+|supplierId|String|是|供应商id|
+|update|json|是|更新数据|
+
+请求示例
+
+```json
+{
+  "status": "able"
+}
+```
+
+响应示例
+
+```json
+{
+  "status": "success",
+  "data": {
+    "_id": "69edc681b6e997e4c321a2cd",
+    "name": "supplier003",
+    "phone": "2552",
+    "address": "moscow",
+    "status": "able",
+    "createdAt": "2026-04-26T08:02:09.340Z",
+    "updatedAt": "2026-04-27T16:15:12.063Z",
+    "__v": 0
+  },
+  "message": "更新供应商成功",
+  "requestTime": "2026-04-27T16:15:12.061Z"
 }
 ```
 
@@ -880,7 +1125,7 @@
 
 ```json
 {
-  "supplierId": "1233444"
+  "supplierId": "69ef8964e8b99293e843be97"
 }
 ```
 
@@ -890,27 +1135,27 @@
 {
   "status": "success",
   "data": null,
-  "message": "删除成功",
-  "requestTime": "req.requestTime"
+  "message": "删除供应商成功",
+  "requestTime": "2026-04-27T16:11:32.865Z"
 }
 ```
 
 3.6 批量删除供应商.  
 .请求方式:delete.  
-.请求地址:/api/psupplier/deleteManySupplier.  
+.请求地址:/api/psupplier/batch/delete  
 .接口描述：  
 .鉴权:需要token
 
 请求参数
 |参数名|类型|必传|说明|
 |---|---|---|---|
-|ids|Array|是|批量删除产品ID的数据集合|
+|ids|Array|是|批量删除供应商ID的数据集合|
 
 请求示例
 
 ```json
 {
-  "ids": [{ "productId": "123455" }, { "productId": "123456" }, { "productId": "123457" }, { "productId": "123458" }]
+  "ids": ["69ef8972e8b99293e843be99", "69ef896be8b99293e843be98"]
 }
 ```
 
@@ -921,13 +1166,13 @@
   "status": "success",
   "data": null,
   "message": "批量删除成功",
-  "requestTime": "req.requestTime"
+  "requestTime": "2026-04-27T16:06:53.335Z"
 }
 ```
 
 3.7 改变供应商启用/禁用状态.  
 .请求方式:post.  
-.请求地址:/api/supplier/changeStatus.  
+.请求地址:/api/supplier/id/status
 .接口描述：  
 .鉴权:需要token
 
@@ -935,15 +1180,13 @@
 |参数名|类型|必传|说明|
 |---|---|---|---|
 |supplierId|String|是|产品id|
-|active|String|是| 启用|
-|inactive|String|是|禁用|
+|status|String|是|供应商状态|
 
 请求示例
 
 ```json
 {
-"supplierId":"123455"，
-"active"
+  "status": "disable"
 }
 ```
 
@@ -952,8 +1195,18 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69edc681b6e997e4c321a2cd",
+    "name": "supplier003",
+    "phone": "2552",
+    "address": "moscow",
+    "status": "disable",
+    "createdAt": "2026-04-26T08:02:09.340Z",
+    "updatedAt": "2026-04-27T15:51:23.902Z",
+    "__v": 0
+  },
+  "message": "供应商状态修改成功",
+  "requestTime": "2026-04-27T15:51:23.893Z"
 }
 ```
 
@@ -961,7 +1214,7 @@
 
 4.1 获取所有订单.  
 .请求方式:get.  
-.请求地址:/api/oredr/getAllorder.  
+.请求地址:/api/oredr/
 .接口描述：  
 .鉴权:需要token
 
@@ -980,12 +1233,106 @@
 
 ```json
 {
-    "status": "success",
-      "total",
-      "page",
-      "limit",
-      "data": "{ data }",
-      "request": "req.requestTime"
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "id": "69ef781d5690a21e55659a40",
+        "orderNo": "ORD_20260427_1757",
+        "userId": {
+          "_id": "69eb03c82e7115cd79e2764e",
+          "username": "user007"
+        },
+        "createdBy": {
+          "_id": "69eb2472ba5f8b88a6b1e0db",
+          "username": "admin"
+        },
+        "createType": "user",
+        "items": [
+          {
+            "productId": {
+              "_id": "69edb0132b428049d1094d91",
+              "price": 100
+            },
+            "price": 100,
+            "quantity": 3,
+            "_id": "69ef781d5690a21e55659a41"
+          }
+        ],
+        "totalPrice": 300,
+        "address": {
+          "name": "purchaser01",
+          "phone": "255079798",
+          "address": "berlin"
+        },
+        "payType": "card"
+      },
+      {
+        "id": "69ef75238a7a711215c20f6c",
+        "orderNo": "ORD_20260427_8043",
+        "userId": {
+          "_id": "69eb2472ba5f8b88a6b1e0db",
+          "username": "admin"
+        },
+        "createdBy": {
+          "_id": "69eb2472ba5f8b88a6b1e0db",
+          "username": "admin"
+        },
+        "createType": "user",
+        "items": [
+          {
+            "productId": {
+              "_id": "69edc8db07ce576a454b9400",
+              "price": 200
+            },
+            "price": 200,
+            "quantity": 3,
+            "_id": "69ef75238a7a711215c20f6d"
+          }
+        ],
+        "totalPrice": 600,
+        "address": {
+          "name": "purchaser01",
+          "phone": "255079798",
+          "address": "warsaw"
+        },
+        "payType": "card"
+      },
+      {
+        "id": "69edc95f07ce576a454b9406",
+        "orderNo": "ORD_20260426_7904",
+        "userId": {
+          "_id": "69eba41570cdd7c6e73e3cd2",
+          "username": "user009"
+        },
+        "createdBy": {
+          "_id": "69eb2472ba5f8b88a6b1e0db",
+          "username": "admin"
+        },
+        "createType": "user",
+        "items": [
+          {
+            "productId": {
+              "_id": "69edc8e207ce576a454b9401",
+              "price": 300
+            },
+            "price": 300,
+            "quantity": 4,
+            "_id": "69edc95f07ce576a454b9407"
+          }
+        ],
+        "totalPrice": 1200,
+        "address": {
+          "name": "purchaser03",
+          "phone": "255079710",
+          "address": "moscow"
+        },
+        "payType": "card"
+      }
+    ]
+  },
+  "message": "获取订单列表成功",
+  "requestTime": "2026-04-27T15:43:41.830Z"
 }
 ```
 
@@ -1004,7 +1351,7 @@
 
 ```json
 {
-  "orderId": "123456"
+  "orderId": "69ef781d5690a21e55659a40"
 }
 ```
 
@@ -1013,8 +1360,35 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69ef781d5690a21e55659a40",
+    "orderNo": "ORD_20260427_1757",
+    "userId": {
+      "_id": "69eb03c82e7115cd79e2764e",
+      "username": "user007"
+    },
+    "createType": "user",
+    "items": [
+      {
+        "productId": {
+          "_id": "69edb0132b428049d1094d91",
+          "price": 100
+        },
+        "price": 100,
+        "quantity": 3,
+        "_id": "69ef781d5690a21e55659a41"
+      }
+    ],
+    "totalPrice": 300,
+    "address": {
+      "name": "purchaser01",
+      "phone": "255079798",
+      "address": "berlin"
+    },
+    "payType": "card"
+  },
+  "message": "获取订单详情成功",
+  "requestTime": "2026-04-27T15:15:13.071Z"
 }
 ```
 
@@ -1028,32 +1402,25 @@
 |参数名|类型|必传|说明|
 |----|----|----|----|
 |userId|String|是|顾客id|
-|createdBy|Object|是|创建订单的id|
 |items|Array|是|商品数组|
-|createType|String|否|创建类型[用户/售货员]
-|totalPrice|Number|是|金额合计|
-|status|String|是|订单状态|
-|address|String|是|收件人地址|
-|payType|支付类型|否|支付类型|
-|remark|String|否|订单备注|
+|address|String|是|收件人信息|
 
 请求示例
 
 ```json
 {
-"userId":"iser01",
-"createBy":"user01",
-"createType":"user",
-"items":[
-{"productId":"123344"},
-{"productId":"223344"}
-],
-"status":"pending"
-"address":{
-"name": "name1",
-"phone": "255079778"
-"address": "minsk",
-}
+  "userId": "69eb03c82e7115cd79e2764e",
+  "items": [
+    {
+      "productId": "69edb0132b428049d1094d91",
+      "quantity": 1
+    }
+  ],
+  "address": {
+    "name": "purchaser01",
+    "phone": "255079798",
+    "address": "berlin"
+  }
 }
 ```
 
@@ -1061,15 +1428,35 @@
 
 ```json
 {
-"orderNo":"112233445566",
-"userid":"userId",
-"createdBy": "user01",
-"createType": "user",
-"items": "orderItems",
-"totalPrice",
-"address",
-"payType": "card",
-"remark": "",
+  "status": "success",
+  "data": {
+    "orderNo": "ORD_20260427_4797",
+    "userId": "69eb03c82e7115cd79e2764e",
+    "createdBy": "69eb2472ba5f8b88a6b1e0db",
+    "createType": "user",
+    "items": [
+      {
+        "productId": "69edb0132b428049d1094d91",
+        "price": 100,
+        "quantity": 1,
+        "_id": "69ef730f9f9570e5c5fa3ed4"
+      }
+    ],
+    "totalPrice": 100,
+    "status": "pending",
+    "address": {
+      "name": "purchaser01",
+      "phone": "255079798",
+      "address": "berlin"
+    },
+    "payType": "card",
+    "_id": "69ef730f9f9570e5c5fa3ed3",
+    "createdAt": "2026-04-27T14:30:39.457Z",
+    "updatedAt": "2026-04-27T14:30:39.457Z",
+    "__v": 0
+  },
+  "message": "创建订单成功",
+  "requestTime": "2026-04-27T14:30:39.447Z"
 }
 ```
 
@@ -1088,7 +1475,11 @@
 
 ```json
 {
-  "orderId": "1122333"
+  "address": {
+    "name": "purchaser01",
+    "phone": "255079798",
+    "address": "new yourk"
+  }
 }
 ```
 
@@ -1096,9 +1487,35 @@
 
 ```json
 {
-"message":"订单产品成功",
-"data": { newProduct },
-"requestTime": "req.requestTime"
+  "status": "success",
+  "data": {
+    "address": {
+      "name": "purchaser01",
+      "phone": "255079798",
+      "address": "new yourk"
+    },
+    "_id": "69edc8fa07ce576a454b9402",
+    "orderNo": "ORD_20260426_5863",
+    "userId": "69eb03c82e7115cd79e2764e",
+    "createdBy": "69eb2472ba5f8b88a6b1e0db",
+    "createType": "user",
+    "items": [
+      {
+        "productId": "69edb0132b428049d1094d91",
+        "price": 100,
+        "quantity": 1,
+        "_id": "69edc8fa07ce576a454b9403"
+      }
+    ],
+    "totalPrice": 100,
+    "status": "pending",
+    "payType": "card",
+    "createdAt": "2026-04-26T08:12:42.491Z",
+    "updatedAt": "2026-04-27T14:27:09.637Z",
+    "__v": 0
+  },
+  "message": "更新订单成功",
+  "requestTime": "2026-04-27T14:27:09.633Z"
 }
 ```
 
@@ -1111,13 +1528,13 @@
 请求参数
 |参数名|类型|必传|说明|
 |----|----|----|----|
-|productId|String|是|商品id|
+|orderId|String|是|商品id|
 
 请求示例
 
 ```json
 {
-  "productId": "1233444"
+  "orderId": "69edc434b6e997e4c321a2c0"
 }
 ```
 
@@ -1127,14 +1544,14 @@
 {
   "status": "success",
   "data": null,
-  "message": "删除成功",
-  "requestTime": "req.requestTime"
+  "message": "删除订单成功",
+  "requestTime": "2026-04-27T14:20:43.915Z"
 }
 ```
 
 4.6 批量删除订单.  
 .请求方式:delete.  
-.请求地址:/api/order/ids.  
+.请求地址:/api/order/batch/delete  
 .接口描述：  
 .鉴权:需要token
 
@@ -1147,7 +1564,7 @@
 
 ```json
 {
-  "ids": [{ "orderId": "123455" }, { "orderId": "123456" }, { "orderId": "123457" }, { "orderId": "123458" }]
+  "ids": ["69edc693b6e997e4c321a2ce", "69edc694b6e997e4c321a2d0"]
 }
 ```
 
@@ -1158,13 +1575,13 @@
   "status": "success",
   "data": null,
   "message": "批量删除成功",
-  "requestTime": "req.requestTime"
+  "requestTime": "2026-04-27T14:24:33.650Z"
 }
 ```
 
 4.7 改变订单状态.  
 .请求方式:post.  
-.请求地址:/api/order/id/{pay/ship,complete,cancel}.  
+.请求地址:/api/order/id/status.  
 .接口描述：  
 .鉴权:需要token
 
@@ -1172,18 +1589,13 @@
 |参数名|类型|必传|说明|
 |----|----|----|----|
 |orderId|String|是|产品id|
-|pending|String|是|待处理|
-|paid|String|是|支付|
-|shipped|String|是|配送|
-|completed|String|是|完成|
-|camceled|String|是|取消|
+|status|String|是|订单状态|
 
 请求示例
 
 ```json
 {
-"productId":"123455"，
-"pay"
+  "status": "paid"
 }
 ```
 
@@ -1192,16 +1604,42 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "address": {
+      "name": "purchaser03",
+      "phone": "255079710",
+      "address": "moscow"
+    },
+    "_id": "69edc95f07ce576a454b9406",
+    "orderNo": "ORD_20260426_7904",
+    "userId": "69eba41570cdd7c6e73e3cd2",
+    "createdBy": "69eb2472ba5f8b88a6b1e0db",
+    "createType": "user",
+    "items": [
+      {
+        "productId": "69edc8e207ce576a454b9401",
+        "price": 300,
+        "quantity": 4,
+        "_id": "69edc95f07ce576a454b9407"
+      }
+    ],
+    "totalPrice": 1200,
+    "status": "paid",
+    "payType": "card",
+    "createdAt": "2026-04-26T08:14:23.346Z",
+    "updatedAt": "2026-04-27T14:18:04.236Z",
+    "__v": 0
+  },
+  "message": "订单状态修改成功",
+  "requestTime": "2026-04-27T14:18:04.190Z"
 }
 ```
 
 ### 5 配送模块（Delivery 集合）
 
-5.1 获取所有产品.  
+5.1 获取所有配送单  
 .请求方式:get.  
-.请求地址:/api/product/getAllProducts.  
+.请求地址:/api/delivery/  
 .接口描述：  
 .鉴权:需要token
 
@@ -1220,32 +1658,71 @@
 
 ```json
 {
-
-    "status": "success",
-      "total",
-      "page",
-      "limit",
-      "data": "{ data }",
-      "request": "req.requestTime"
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "_id": "69edcd9ae7134f08b8ede6cc",
+        "deliveryNo": "ORD_20260426_6622",
+        "orderId": {
+          "_id": "69edc95f07ce576a454b9406",
+          "orderNo": "ORD_20260426_7904",
+          "totalPrice": 1200
+        },
+        "status": "waiting",
+        "createdAt": "2026-04-26T08:32:26.156Z",
+        "updatedAt": "2026-04-26T08:32:26.156Z",
+        "__v": 0
+      },
+      {
+        "_id": "69edcd85e7134f08b8ede6ca",
+        "deliveryNo": "ORD_20260426_3230",
+        "orderId": {
+          "_id": "69edc693b6e997e4c321a2ce",
+          "orderNo": "ORD_20260426_7036",
+          "totalPrice": 100
+        },
+        "status": "waiting",
+        "createdAt": "2026-04-26T08:32:05.383Z",
+        "updatedAt": "2026-04-26T08:32:05.383Z",
+        "__v": 0
+      },
+      {
+        "_id": "69edcc77e7134f08b8ede6c8",
+        "deliveryNo": "ORD_20260426_4627",
+        "orderId": {
+          "_id": "69edc434b6e997e4c321a2c0",
+          "orderNo": "ORD_20260426_1304",
+          "totalPrice": 100
+        },
+        "status": "waiting",
+        "createdAt": "2026-04-26T08:27:35.364Z",
+        "updatedAt": "2026-04-26T08:27:35.364Z",
+        "__v": 0
+      }
+    ]
+  },
+  "message": "获取配送单列表成功",
+  "requestTime": "2026-04-26T08:32:40.411Z"
 }
 ```
 
-5.2 获取单个产品详情.  
+5.2 获取单个配送单详情.  
 .请求方式:get.  
-.请求地址:/api/product/getProduct.  
+.请求地址:/api/delivery/
 .接口描述：  
 .鉴权:需要token
 
 请求参数
 |参数名|类型|必传|说明|
 |-----|----|----|----|
-|productId|String|是|产品id|
+|orderId|String|是|订单id|
 
 请求示例
 
 ```json
 {
-  "productId": "123456"
+  "deliveryId": "69edcc77e7134f08b8ede6c8"
 }
 ```
 
@@ -1254,37 +1731,40 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69edcc77e7134f08b8ede6c8",
+    "deliveryNo": "ORD_20260426_4627",
+    "orderId": {
+      "_id": "69edc434b6e997e4c321a2c0",
+      "orderNo": "ORD_20260426_1304",
+      "totalPrice": 100
+    },
+    "status": "waiting",
+    "createdAt": "2026-04-26T08:27:35.364Z",
+    "updatedAt": "2026-04-26T08:27:35.364Z",
+    "__v": 0
+  },
+  "message": "获取配送单详情成功",
+  "requestTime": "2026-04-26T08:33:53.118Z"
 }
 ```
 
-5.3 创建一个产品.  
+5.3 创建一个配送单.  
 .请求方式:post.  
-.请求地址:/api/product/createProduct.  
+.请求地址:/api/delivery/create  
 .接口描述：  
 .鉴权:需要token
 
 请求参数
 |参数名|类型|必传|说明|
 |-----|----|----|----|
-|name|String|是|商品名称|
-|price|Number|是|价格|
-|stock|Number|是|库存|
-|supplierId|Object|是|供应商id|
-|description|String|否|描述|
-|status|String|否|上下架状态|
+|orderId|String|是|订单Id|
 
 请求示例
 
 ```json
 {
-"productName":"rose"
-"price":"100",
-"stock":"100"
-"description":"玫瑰花"
-"supplierId":"supplier01",
-"status":"on"
+  "orderId": "69edc434b6e997e4c321a2c0"
 }
 ```
 
@@ -1292,37 +1772,41 @@
 
 ```json
 {
-"message":"创建产品成功",
-"data": { newProduct },
-"requestTime": "req.requestTime"
+  "status": "success",
+  "data": {
+    "deliveryNo": "ORD_20260426_4627",
+    "orderId": "69edc434b6e997e4c321a2c0",
+    "status": "waiting",
+    "_id": "69edcc77e7134f08b8ede6c8",
+    "createdAt": "2026-04-26T08:27:35.364Z",
+    "updatedAt": "2026-04-26T08:27:35.364Z",
+    "__v": 0
+  },
+  "message": "创建配送单成功",
+  "requestTime": "2026-04-26T08:27:35.337Z"
 }
 ```
 
-5.4 更新产品.  
+5.4 更新配送单.  
 .请求方式:put.  
-.请求地址:/api/product/updateProduct.  
+.请求地址:/api/product/id/update.  
 .接口描述：  
 .鉴权:需要token
 
 请求参数
 |参数名|类型|必传|说明|
 |----|----|----|----|
-|name|String|是|商品名称|
-|price|Number|是|价格|
-|stock|Number|是|库存|
-|supplierId|Object|是|供应商id|
-|description|String|否|描述|
+|deliveryId|String|是|配送单Id|
 
 请求示例
 
 ```json
 {
-"productName":"tulip"
-"price":"100",
-"stock":"100"
-"description":"郁金香"
-"supplierId":"supplier01",
-"status":"on"
+  "address": {
+    "name": "purchaser01",
+    "phone": "255079798",
+    "address": "london"
+  }
 }
 ```
 
@@ -1330,28 +1814,42 @@
 
 ```json
 {
-"message":"更新产品成功",
-"data": { newProduct },
-"requestTime": "req.requestTime"
+  "status": "success",
+  "data": {
+    "address": {
+      "name": "purchaser01",
+      "phone": "255079798",
+      "address": "london"
+    },
+    "_id": "69edd2cc97802dd5cece5196",
+    "deliveryNo": "ORD_20260426_7807",
+    "orderId": "69edc694b6e997e4c321a2d0",
+    "status": "waiting",
+    "createdAt": "2026-04-26T08:54:36.194Z",
+    "updatedAt": "2026-04-26T09:01:19.776Z",
+    "__v": 0
+  },
+  "message": "更新配送单成功",
+  "requestTime": "2026-04-26T09:01:19.759Z"
 }
 ```
 
 5.5 删除单个产品.  
 .请求方式:delete.  
-.请求地址:/api/product/deleteProduct.  
+.请求地址:/api/product/id/delete.  
 .接口描述：  
 .鉴权:需要token
 
 请求参数
 |参数名|类型|必传|说明|
 |----|----|---|---|
-|productId|String|是|商品id|
+|deliveryId|String|是|配送单id|
 
 请求示例
 
 ```json
 {
-  "productId": "1233444"
+  "deliveryId": "69edd2cc97802dd5cece5196"
 }
 ```
 
@@ -1361,27 +1859,27 @@
 {
   "status": "success",
   "data": null,
-  "message": "删除成功",
-  "requestTime": "req.requestTime"
+  "message": "删除配送单成功",
+  "requestTime": "2026-04-26T09:05:44.945Z"
 }
 ```
 
-5.6 批量删除产品.  
+5.6 批量删除配送单.  
 .请求方式:delete.  
-.请求地址:/api/product/deleteManyProduct.  
+.请求地址:/api/product/batch/delete.  
 .接口描述：  
 .鉴权:需要token.
 
 请求参数  
 |参数名|类型|必传|说明|
 |----|---|---|---|
-|ids|Array|是|批量删除产品ID的数据集合|
+|ids|Array|是|批量删配送单ID的数据集合|
 
 请求示例
 
 ```json
 {
-  "ids": [{ "productId": "123455" }, { "productId": "123456" }, { "productId": "123457" }, { "productId": "123458" }]
+  "ids": ["69edd1f897802dd5cece5194", "69edcd9ae7134f08b8ede6cc"]
 }
 ```
 
@@ -1392,29 +1890,27 @@
   "status": "success",
   "data": null,
   "message": "批量删除成功",
-  "requestTime": "req.requestTime"
+  "requestTime": "2026-04-26T09:16:56.691Z"
 }
 ```
 
-5.7 改变产品上下架状态.  
+5.7 改变配送单状态.  
 .请求方式:post.  
-.请求地址:/api/product/changeStatus.  
+.请求地址:/api/delivery/id/status.  
 .接口描述：  
 .鉴权:需要token
 
 请求参数
 |参数名|类型|必传|说明|
 |----|----|---|---|
-|productId|String|是|产品id|
-|on|String|是|上架|
-|off|String|是|下架|
+|deliveryId|String|是|配送单id|
+|status|string|是|配送单状态｜
 
 请求示例
 
 ```json
 {
-"productId":"123455"，
-"on"
+  "status": "delivered"
 }
 ```
 
@@ -1423,7 +1919,16 @@
 ```json
 {
   "status": "success",
-  "data": "{ data }",
-  "request": "req.requestTime"
+  "data": {
+    "_id": "69edcc77e7134f08b8ede6c8",
+    "deliveryNo": "ORD_20260426_4627",
+    "orderId": "69edc434b6e997e4c321a2c0",
+    "status": "delivered",
+    "createdAt": "2026-04-26T08:27:35.364Z",
+    "updatedAt": "2026-04-26T09:23:22.224Z",
+    "__v": 0
+  },
+  "message": "配送状态修改成功",
+  "requestTime": "2026-04-26T09:23:22.214Z"
 }
 ```

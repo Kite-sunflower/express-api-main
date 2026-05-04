@@ -2,7 +2,7 @@ const { createOrder, findAllOrders, findOrderById, updateOrderById, deleteOrderB
 // 1. 创建订单
 exports.create = async (req, res) => {
   try {
-    const data = await createOrder(req.body);
+    const data = await createOrder(req.body, req.user);
     res.sendSuccess(201, data, '创建订单成功');
   } catch (err) {
     res.sendError(400, err.message);

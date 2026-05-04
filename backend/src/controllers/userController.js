@@ -1,4 +1,4 @@
-const { createUser, findAllUsers, findUserById, updateUserById, deleteUserById, deleteManyUser, updateUserStatus, updateUserRole } = require('../services/userService');
+const { createUser, findAllUsers, findUserById, updateUserById, deleteUserById, deleteManyUser, updateUserStatus, updateUserRole, updatePwd } = require('../services/userService');
 
 // 1. 创建用户（管理员）
 exports.create = async (req, res) => {
@@ -67,11 +67,14 @@ exports.updateStatus = async (req, res) => {
     const { targetStatus } = req.body;
     const userId = req.params.id;
 
+    console.log('后端拿到的status:', targetStatus);
+
     // 调用公共函数
     const user = await updateUserStatus(userId, targetStatus);
 
     res.sendSuccess(200, user, `状态修改成功：${targetStatus}`);
   } catch (err) {
+    console.log('【错误堆栈】', err.stack);
     res.sendError(400, err.message);
   }
 };
@@ -88,6 +91,23 @@ exports.updateRole = async (req, res) => {
     res.sendSuccess(200, user, `角色修改成功：${targetRole}`);
   } catch (err) {
     // 错误统一捕获
+    res.sendError(400, err.message);
+  }
+};
+
+// 修改用户密码（自己改自己）
+exports.updatePassword = async (req, res) => {
+  try {
+    const { oldPwd, newPwd } = req.body; // 解构出来
+
+    // 必须加这两行！防止 undefined！
+    if (!oldPwd) return res.sendError(400, '请输入旧密码');
+    if (!newPwd) return res.sendError(400, '请输入新密码');
+
+    const data = await updatePwd(req.params.id, oldPwd, newPwd);
+
+    res.sendSuccess(200, data, '密码修改成功');
+  } catch (err) {
     res.sendError(400, err.message);
   }
 };
